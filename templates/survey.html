@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment</title>
+    <style>
+        body { font-family: sans-serif; background: #0d253f; color: white; padding: 15px; }
+        .q-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #f1c40f; }
+        .q-title { font-weight: bold; font-size: 1.1em; color: #f1c40f; }
+        .q-text { display: block; margin: 8px 0; color: #ccc; font-size: 0.9em; }
+        input[type=range] { width: 100%; margin: 15px 0; accent-color: #f1c40f; }
+        .logic-label { font-style: italic; font-size: 0.85em; color: #f1c40f; min-height: 2.4em; display: block; }
+        .sticky-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #111; padding: 15px; text-align: center; }
+        button { padding: 12px 40px; background: #f1c40f; color: #0d253f; border: none; border-radius: 25px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <form action="/submit" method="post" style="padding-bottom: 80px;">
+        <input type="hidden" name="name" value="{{name}}">
+        <input type="hidden" name="age" value="{{age}}">
+        <input type="hidden" name="gender" value="{{gender}}">
+
+{% for key, val in questions.items() %}
+<div class="q-card">
+    <span class="q-title">{{key}}</span>
+    <span class="q-text">{{val.q}}</span>
+    
+    <span class="logic-label" id="desc-{{loop.index}}">
+        {{val.mid}} (Score: 2)
+    </span>
+    
+    <input type="range" 
+           name="{{key}}" 
+           min="0" max="8" value="2" 
+           step="1"
+           oninput="updateLogic(this, 'desc-{{loop.index}}', '{{val.low|replace("'", "\\'")}}', '{{val.mid|replace("'", "\\'")}}', '{{val.high|replace("'", "\\'")}}')">
+</div>
+{% endfor %}
+
+
+        <div class="sticky-footer">
+            <button type="submit">Complete Mapping</button>
+        </div>
+    </form>
+
+
+<script>
+function updateLogic(slider, targetId, low, mid, high) {
+    let val = parseInt(slider.value);
+    let target = document.getElementById(targetId);
+    let text = "";
+    
+    // Logic mapping
+    if (val <= 2) {
+        text = low;
+    } else if (val <= 5) {
+        text = mid;
+    } else {
+        text = high;
+    }
+    
+    // Update the UI
+    if (target) {
+        target.innerText = text + " (Score: " + val + ")";
+    }
+}
+</script>
+
+</body>
+</html>

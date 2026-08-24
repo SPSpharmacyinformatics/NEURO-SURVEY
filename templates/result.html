@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>The World View</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: sans-serif; background: #0d253f; color: white; text-align: center; padding: 20px; }
+        .pulse-box { 
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            padding: 30px; border-radius: 20px; margin-bottom: 25px; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        .total-number { font-size: 3em; font-weight: bold; display: block; }
+        .chart-card { background: white; padding: 15px; border-radius: 20px; margin-top: 10px; }
+        .message { font-size: 1.1em; line-height: 1.5; color: #a0acba; margin: 20px 0; }
+        .btn-back { color: #f1c40f; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="pulse-box">
+        <span class="total-number">{{total}}</span>
+        <span>Minds Explored So Far</span>
+    </div>
+
+    <h1>You are not alone.</h1>
+    <p class="message">
+        Neurodiversity is the standard, not the exception. Below is the <strong>Community Signature</strong>—the average of every person who has walked this path. Your unique spikes are simply different notes in the same human symphony.
+    </p>
+
+    <div class="chart-card">
+        <canvas id="worldChart"></canvas>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <a href="/" class="btn-back">Return to Home</a>
+    </div>
+
+    <script>
+        new Chart(document.getElementById('worldChart'), {
+            type: 'radar',
+            data: {
+                labels: {{ labels|tojson }},
+                datasets: [{
+                    label: 'The Community Average',
+                    data: {{ avg_scores|tojson }},
+                    borderColor: '#6a11cb',
+                    backgroundColor: 'rgba(106, 17, 203, 0.3)',
+                    borderWidth: 4,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                scales: {
+                    r: {
+                        min: 0, max: 8,
+                        ticks: { display: false },
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                        pointLabels: { color: '#0d253f', font: { size: 10, weight: 'bold' } }
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    </script>
+</body>
+</html>

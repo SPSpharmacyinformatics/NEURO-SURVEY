@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Path of Self-Discovery</title>
+    <style>
+        :root {
+            --primary-bg: #0d253f; 
+            --accent-gold: #f1c40f; 
+            --text-main: #f4f7f9;
+            --text-sub: #a0acba;
+            --step-bg: rgba(255,255,255,0.05);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0; padding: 0;
+            background-color: var(--primary-bg);
+            color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh;
+        }
+
+        .header {
+            width: 100%; text-align: center; padding: 60px 20px 40px;
+            background: radial-gradient(circle at 50% 120%, rgba(241, 196, 15, 0.2), var(--primary-bg) 60%);
+        }
+
+        .icon-discovery { width: 80px; height: 80px; margin-bottom: 15px; }
+
+        h1 { margin: 10px 0; font-weight: 300; font-size: 2.2em; letter-spacing: 1px; }
+        .tagline { color: var(--text-sub); font-size: 1.1em; max-width: 320px; margin: 0 auto; line-height: 1.4; }
+
+        .path-container { width: 90%; max-width: 450px; padding: 0 0 100px; position: relative; }
+
+        .path-container::after {
+            content: ''; position: absolute; left: 24px; top: 20px; bottom: 100px;
+            width: 2px; background: linear-gradient(to bottom, var(--accent-gold), rgba(241,196,15,0));
+            z-index: 1;
+        }
+
+        .step {
+            display: flex; align-items: flex-start; margin-bottom: 25px;
+            padding: 15px; border-radius: 12px; background: var(--step-bg);
+            position: relative; z-index: 2;
+        }
+
+        .step-circle {
+            min-width: 48px; min-height: 48px; border-radius: 50%;
+            background: #111; border: 2px solid var(--accent-gold);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; color: var(--accent-gold); font-size: 1.2em;
+            margin-right: 15px;
+        }
+
+        .step-content { flex: 1; }
+        .step-title { font-weight: bold; color: white; margin-bottom: 4px; }
+        .step-desc { font-size: 0.9em; color: var(--text-sub); line-height: 1.4; }
+
+        .start-action {
+            width: 90%; max-width: 450px; padding: 30px; border-radius: 15px;
+            background: white; color: #333; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            position: relative; top: -50px; margin-bottom: 50px;
+        }
+
+        .start-action input, .start-action select {
+            width: 100%; padding: 14px; margin: 8px 0;
+            border: 1px solid #ddd; border-radius: 8px;
+            box-sizing: border-box; font-size: 1em;
+        }
+
+        .consent-box {
+            text-align: left; margin: 15px 0; padding: 12px;
+            background: #f9f9f9; border-radius: 8px; border: 1px solid #eee;
+        }
+
+        .start-action button {
+            width: 100%; padding: 16px; margin-top: 15px;
+            background: var(--accent-gold); color: #0d253f;
+            border: none; border-radius: 30px; font-weight: bold; font-size: 1.1em;
+            cursor: pointer; transition: 0.3s;
+        }
+
+        .privacy-hint { font-size: 0.75em; color: #777; margin-top: 15px; line-height: 1.4; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <svg class="icon-discovery" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="48" stroke="#f1c40f" stroke-width="2"/>
+            <path d="M50 15V85M15 50H85M32.3 32.3L67.7 67.7M67.7 32.3L32.3 67.7" stroke="#f1c40f" stroke-width="1.5"/>
+            <path d="M50 40L60 50L50 60L40 50L50 40Z" fill="#f1c40f"/>
+            <path d="M50 2L50 15M98 50H85M50 98L50 85M2 50H15" stroke="#f1c40f" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <h1>Begin the Journey</h1>
+        <p class="tagline">Explore your unique profile through 17 parameters of the neurodivergent spectrum.</p>
+    </div>
+
+    <div class="path-container">
+        <div class="step">
+            <div class="step-circle">1</div>
+            <div class="step-content">
+                <div class="step-title">Initial Introspection</div>
+                <div class="step-desc">Consider 17 parameters of neurodiversity, from Executive Function to Sensory Sensitivities.</div>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-circle">2</div>
+            <div class="step-content">
+                <div class="step-title">The "Standard Baseline"</div>
+                <div class="step-desc">All parameters are set to 2—a standard experience. Adjust based on *your* daily reality.</div>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-circle">3</div>
+            <div class="step-content">
+                <div class="step-title">Self-Discovery Mapping</div>
+                <div class="step-desc">Instantly visualize your results and understand your unique "Spiky Profile."</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="start-action">
+        <h3 style="margin-top:0; text-align:center;">User Identity</h3>
+        
+        <form action="/survey" method="post">
+            <input type="text" name="name" placeholder="Full Name" required>
+            <input type="number" name="age" placeholder="Age" required>
+            <select name="gender" required>
+                <option value="" disabled selected>Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+            </select>
+
+            <div class="consent-box">
+                <label style="display: flex; align-items: flex-start; cursor: pointer;">
+                    <input type="checkbox" name="consent" required style="margin-top: 4px; margin-right: 10px;">
+                    <span style="font-size: 0.85em; color: #444;">
+                        I agree to the <strong>Data Privacy Terms</strong>. I understand my data is pseudonymized for research purposes.
+                    </span>
+                </label>
+            </div>
+
+            <button type="submit">Step Onto the Path</button>
+
+            <div class="privacy-hint">
+                <strong>Compliance:</strong> Per UAE Law No. 45/2021, names are removed after submission. Age/Gender are kept for anonymized statistical analysis. 🔒 Securely stored.
+            </div>
+        </form>
+    </div>
+
+</body>
+</html>

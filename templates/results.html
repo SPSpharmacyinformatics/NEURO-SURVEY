@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Discovery Map</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: sans-serif; background: #0d253f; color: white; text-align: center; padding: 15px; }
+        .result-card { 
+            background: rgba(241, 196, 15, 0.15); 
+            border: 2px solid #f1c40f; 
+            padding: 20px; border-radius: 15px; margin-bottom: 20px; 
+        }
+        .result-title { font-size: 1.4em; color: #f1c40f; font-weight: bold; margin-bottom: 5px; }
+        .result-desc { font-size: 0.9em; color: #ccc; line-height: 1.4; }
+        .chart-box { background: white; padding: 10px; border-radius: 20px; margin-top: 10px; }
+        .disclaimer { font-size: 0.7em; color: #666; margin-top: 15px; font-style: italic; }
+    </style>
+</head>
+<body>
+    <p style="margin-bottom:5px;">Analysis for {{name}} ({{age}})</p>
+    
+    <div class="result-card">
+        <div class="result-title">{{profile_title}}</div>
+        <div class="result-desc">{{profile_desc}}</div>
+    </div>
+
+    <div class="chart-box">
+        <canvas id="radarChart"></canvas>
+    </div>
+
+    <p class="disclaimer">Note: This engine provides a logical classification based on user-reported intensities. It is a tool for self-discovery and not a clinical diagnosis.</p>
+    <a href="/" style="color:#f1c40f; text-decoration:none; display:block; margin-top:20px;">← Start New Assessment</a>
+
+    <script>
+        new Chart(document.getElementById('radarChart'), {
+            type: 'radar',
+            data: {
+                labels: {{ labels|tojson }},
+                datasets: [{
+                    label: 'Your Map',
+                    data: {{ scores|tojson }},
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.4)',
+                    borderWidth: 3
+                }, {
+                    label: 'Baseline',
+                    data: Array({{ labels|length }}).fill(2),
+                    borderColor: 'rgba(231, 76, 60, 0.5)',
+                    borderDash: [5, 5],
+                    fill: false,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                scales: {
+                    r: {
+                        min: 0, max: 8,
+                        ticks: { display: false },
+                        pointLabels: { color: '#0d253f', font: { size: 9, weight: 'bold' } }
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    </script>
+</body>
+</html>
+<a href="/world-view" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background: #6a11cb; color: white; border-radius: 25px; text-decoration: none; font-weight: bold;">
+    See the World View
+</a>
