@@ -12,35 +12,41 @@
 
 {% if section.id in ('phq9', 'gad7') %}
     <p class="muted">Over the last 2 weeks, how often have these critters visited?</p>
+    {% set ns = namespace(q=0) %}
     {% for item in section["items"] %}
     <div class="q-item"><p>{{ item }}</p>
         {% for s in section.scale %}
-        <label class="opt"><input type="radio" name="{{ section.id }}_{{ loop.index0 }}"
+        <label class="opt"><input type="radio" name="{{ section.id }}_{{ ns.q }}"
                value="{{ loop.index0 }}" {% if loop.index0 == 0 %}required{% endif %}> {{ s }}</label>
         {% endfor %}
     </div>
+    {% set ns.q = ns.q + 1 %}
     {% endfor %}
 
 {% elif section.id == 'asrs' %}
     <p class="muted">Over the last 6 months, how often have you:</p>
+    {% set ns = namespace(q=0) %}
     {% for item in section["items"] %}
     <div class="q-item"><p>{{ item.t }}</p>
         {% for s in section.scale %}
-        <label class="opt"><input type="radio" name="asrs_{{ loop.index0 }}"
+        <label class="opt"><input type="radio" name="asrs_{{ ns.q }}"
                value="{{ loop.index0 }}" {% if loop.index0 == 0 %}required{% endif %}> {{ s }}</label>
         {% endfor %}
     </div>
+    {% set ns.q = ns.q + 1 %}
     {% endfor %}
 
 {% elif section.id == 'aq10' %}
     <p class="muted">How much does each statement sound like you?</p>
+    {% set ns = namespace(q=0) %}
     {% for item in section["items"] %}
     <div class="q-item"><p>{{ item }}</p>
         {% for s in section.scale %}
-        <label class="opt"><input type="radio" name="aq10_{{ loop.index0 }}"
+        <label class="opt"><input type="radio" name="aq10_{{ ns.q }}"
                value="{{ loop.index0 }}" {% if loop.index0 == 0 %}required{% endif %}> {{ s }}</label>
         {% endfor %}
     </div>
+    {% set ns.q = ns.q + 1 %}
     {% endfor %}
 
 {% elif section.id in ('mdq', 'pcptsd5') %}
@@ -49,13 +55,15 @@
     {% else %}
         <p class="muted">Has there ever been a stretch of several days where… (Yes/No)</p>
     {% endif %}
+    {% set ns = namespace(q=0) %}
     {% for item in section["items"] %}
     <div class="q-item"><p>{{ loop.index }}. {{ item }}</p>
         {% for s in section.scale %}
-        <label class="opt"><input type="radio" name="{{ section.id }}_{{ loop.index0 }}"
+        <label class="opt"><input type="radio" name="{{ section.id }}_{{ ns.q }}"
                value="{{ s }}" {% if loop.index0 == 0 %}required{% endif %}> {{ s }}</label>
         {% endfor %}
     </div>
+    {% set ns.q = ns.q + 1 %}
     {% endfor %}
 
 {% elif section.id == 'big5' %}
