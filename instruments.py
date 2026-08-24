@@ -10,6 +10,8 @@ Sources (current standards):
 - IPIP-50 Big Five (Goldberg, public domain) + DSM-5-TR PID-5-BF trait-domain mapping
 """
 
+import math
+
 LIKERT4 = ["Not at all", "Several days", "More than half the days", "Nearly every day"]
 FREQ5 = ["Never", "Rarely", "Sometimes", "Often", "Very Often"]
 AQ_AGREE = ["Definitely agree", "Slightly agree", "Slightly disagree", "Definitely disagree"]
