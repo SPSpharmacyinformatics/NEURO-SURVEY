@@ -1,19 +1,22 @@
 {% extends "base.html" %}
+{% from "_blip.html" import blip %}
 {% block title %}IQ Assessment{% endblock %}
 {% block body %}
 <div class="center">
-    <h1>Cognitive Ability Assessment</h1>
-    <p class="muted">Structured on the Cattell-Horn-Carroll (CHC) framework — the same
-    theory behind the WJ-V and WAIS batteries.</p>
+    <h1>🏋️ The Big Brain Olympics</h1>
+    <p class="muted" style="color:#eaf2ff">Six official thinking-muscles, judged by the
+    Cattell-Horn-Carroll rulebook (the same one behind the WJ-V and WAIS).</p>
 </div>
+
+{{ blip("wow", "No calculators. No search engines. No asking your goldfish. 🐠") }}
+
 <div class="card">
-    <h2>Domains measured</h2>
+    <h2>The events 🏅</h2>
     {% for code, name, desc in domains %}
-    <p><b style="color:var(--gold)">{{ code }}</b> — {{ name }} <span class="muted">({{ desc }})</span></p>
+    <p><b style="color:var(--ink)">{{ code }}</b> — {{ name }} <span class="muted">({{ desc }})</span></p>
     {% endfor %}
-    <p class="muted">Includes an interactive digit-span (working memory) and a timed
-    symbol-search (processing speed). Allow ~{{ minutes }} minutes in one sitting, without
-    distractions, calculators, or search engines.</p>
-    <a class="btn" href="{{ url_for('iq_test') }}">Begin</a>
+    <p class="muted">Includes vanishing digits (working memory) and a 60-second symbol safari
+    (processing speed). ~{{ minutes }} minutes. Find a cozy spot! 🛋️</p>
+    <a class="btn" href="{{ url_for('iq_test') }}">Enter the arena 🥊</a>
 </div>
 {% endblock %}

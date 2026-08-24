@@ -3,132 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Path of Self-Discovery</title>
+    <title>The Original Wiggly Map</title>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary-bg: #0d253f; 
-            --accent-gold: #f1c40f; 
-            --text-main: #f4f7f9;
-            --text-sub: #a0acba;
-            --step-bg: rgba(255,255,255,0.05);
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0; padding: 0;
-            background-color: var(--primary-bg);
-            color: var(--text-main);
-            display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh;
-        }
-
-        .header {
-            width: 100%; text-align: center; padding: 60px 20px 40px;
-            background: radial-gradient(circle at 50% 120%, rgba(241, 196, 15, 0.2), var(--primary-bg) 60%);
-        }
-
-        .icon-discovery { width: 80px; height: 80px; margin-bottom: 15px; }
-
-        h1 { margin: 10px 0; font-weight: 300; font-size: 2.2em; letter-spacing: 1px; }
-        .tagline { color: var(--text-sub); font-size: 1.1em; max-width: 320px; margin: 0 auto; line-height: 1.4; }
-
-        .path-container { width: 90%; max-width: 450px; padding: 0 0 100px; position: relative; }
-
-        .path-container::after {
-            content: ''; position: absolute; left: 24px; top: 20px; bottom: 100px;
-            width: 2px; background: linear-gradient(to bottom, var(--accent-gold), rgba(241,196,15,0));
-            z-index: 1;
-        }
-
-        .step {
-            display: flex; align-items: flex-start; margin-bottom: 25px;
-            padding: 15px; border-radius: 12px; background: var(--step-bg);
-            position: relative; z-index: 2;
-        }
-
-        .step-circle {
-            min-width: 48px; min-height: 48px; border-radius: 50%;
-            background: #111; border: 2px solid var(--accent-gold);
-            display: flex; align-items: center; justify-content: center;
-            font-weight: bold; color: var(--accent-gold); font-size: 1.2em;
-            margin-right: 15px;
-        }
-
-        .step-content { flex: 1; }
-        .step-title { font-weight: bold; color: white; margin-bottom: 4px; }
-        .step-desc { font-size: 0.9em; color: var(--text-sub); line-height: 1.4; }
-
-        .start-action {
-            width: 90%; max-width: 450px; padding: 30px; border-radius: 15px;
-            background: white; color: #333; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            position: relative; top: -50px; margin-bottom: 50px;
-        }
-
-        .start-action input, .start-action select {
-            width: 100%; padding: 14px; margin: 8px 0;
-            border: 1px solid #ddd; border-radius: 8px;
-            box-sizing: border-box; font-size: 1em;
-        }
-
-        .consent-box {
-            text-align: left; margin: 15px 0; padding: 12px;
-            background: #f9f9f9; border-radius: 8px; border: 1px solid #eee;
-        }
-
-        .start-action button {
-            width: 100%; padding: 16px; margin-top: 15px;
-            background: var(--accent-gold); color: #0d253f;
-            border: none; border-radius: 30px; font-weight: bold; font-size: 1.1em;
-            cursor: pointer; transition: 0.3s;
-        }
-
-        .privacy-hint { font-size: 0.75em; color: #777; margin-top: 15px; line-height: 1.4; }
+        :root { --ink:#1a1a2e; --paper:#fffdf5; --gold:#ffd93d; }
+        * { box-sizing:border-box; }
+        body { font-family:"Baloo 2","Comic Sans MS",system-ui,sans-serif; color:var(--ink);
+               background:linear-gradient(-45deg,#ff5da2,#a78bfa,#4ecdc4,#ffd93d);
+               background-size:400% 400%; animation:bgshift 16s ease infinite;
+               display:flex; flex-direction:column; align-items:center; min-height:100vh; margin:0;
+               padding-bottom:60px; }
+        @keyframes bgshift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        .header { text-align:center; padding:46px 20px 26px; }
+        h1 { font-size:2.3em; font-weight:800; margin:10px 0; transform:rotate(-1.5deg); }
+        .tagline { color:#fff; font-size:1.05em; max-width:340px; margin:0 auto; text-shadow:0 1px 3px rgba(0,0,0,.25); }
+        .step { background:var(--paper); border:3px solid var(--ink); border-radius:18px;
+                padding:14px 16px; margin:12px auto; max-width:430px; display:flex; gap:14px;
+                box-shadow:5px 5px 0 rgba(26,26,46,.35); }
+        .step-circle { min-width:46px; height:46px; border-radius:50%; background:var(--gold);
+                border:3px solid var(--ink); display:flex; align-items:center; justify-content:center;
+                font-weight:800; font-size:1.2em; }
+        .step-title { font-weight:800; }
+        .step-desc { font-size:.9em; color:#5a6270; }
+        .start-action { background:var(--paper); border:3px solid var(--ink); border-radius:22px;
+                padding:24px; max-width:430px; width:90%; box-shadow:7px 7px 0 rgba(26,26,46,.35);
+                transform:rotate(.5deg); }
+        h3 { margin-top:0; text-align:center; }
+        input, select { width:100%; padding:13px; margin:7px 0; border:3px solid var(--ink);
+                border-radius:12px; font-size:1em; font-family:inherit; }
+        input:focus, select:focus { outline:3px solid #ff5da2; }
+        .consent-box { background:#fff8dc; border:2px dashed var(--ink); border-radius:12px;
+                padding:10px; margin:12px 0; font-size:.85em; }
+        button { width:100%; padding:16px; margin-top:14px; background:var(--gold); color:var(--ink);
+                border:3px solid var(--ink); border-radius:999px; font-weight:800; font-size:1.1em;
+                font-family:inherit; cursor:pointer; box-shadow:4px 4px 0 var(--ink); transition:all .12s; }
+        button:hover { transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--ink); }
+        .privacy-hint { font-size:.75em; color:#5a6270; margin-top:14px; }
+        .back { color:var(--ink); font-weight:700; margin-bottom:14px; text-decoration:none;
+                background:var(--paper); border:2px solid var(--ink); border-radius:999px; padding:6px 16px;
+                box-shadow:3px 3px 0 var(--ink); }
     </style>
 </head>
 <body>
-
     <div class="header">
-        <svg class="icon-discovery" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="50" cy="50" r="48" stroke="#f1c40f" stroke-width="2"/>
-            <path d="M50 15V85M15 50H85M32.3 32.3L67.7 67.7M67.7 32.3L32.3 67.7" stroke="#f1c40f" stroke-width="1.5"/>
-            <path d="M50 40L60 50L50 60L40 50L50 40Z" fill="#f1c40f"/>
-            <path d="M50 2L50 15M98 50H85M50 98L50 85M2 50H15" stroke="#f1c40f" stroke-width="3" stroke-linecap="round"/>
-        </svg>
-        <h1>Begin the Journey</h1>
-        <p class="tagline">Explore your unique profile through 17 parameters of the neurodivergent spectrum.</p>
+        <div style="font-size:52px">🗺️</div>
+        <h1>The Original Wiggly Map</h1>
+        <p class="tagline">17 sliders. One gloriously unique brain. Zero judgment.</p>
+        <a class="back" href="/">← circus entrance</a>
     </div>
 
-    <div class="path-container">
-        <div class="step">
-            <div class="step-circle">1</div>
-            <div class="step-content">
-                <div class="step-title">Initial Introspection</div>
-                <div class="step-desc">Consider 17 parameters of neurodiversity, from Executive Function to Sensory Sensitivities.</div>
-            </div>
-        </div>
-
-        <div class="step">
-            <div class="step-circle">2</div>
-            <div class="step-content">
-                <div class="step-title">The "Standard Baseline"</div>
-                <div class="step-desc">All parameters are set to 2—a standard experience. Adjust based on *your* daily reality.</div>
-            </div>
-        </div>
-
-        <div class="step">
-            <div class="step-circle">3</div>
-            <div class="step-content">
-                <div class="step-title">Self-Discovery Mapping</div>
-                <div class="step-desc">Instantly visualize your results and understand your unique "Spiky Profile."</div>
-            </div>
-        </div>
-    </div>
+    <div class="step wobbleish"><div class="step-circle">1</div><div>
+        <div class="step-title">Initial Introspection 🪞</div>
+        <div class="step-desc">Consider 17 flavors of neurodiversity — from Executive Function to Sensory Sensitivities.</div></div></div>
+    <div class="step"><div class="step-circle">2</div><div>
+        <div class="step-title">The "Standard Baseline" 📏</div>
+        <div class="step-desc">Every slider starts at 2 — the fabled "normal person". Adjust to match YOUR daily reality.</div></div></div>
+    <div class="step"><div class="step-circle">3</div><div>
+        <div class="step-title">Self-Discovery Mapping 🎢</div>
+        <div class="step-desc">Instantly see your spiky profile plotted against the world.</div></div></div>
 
     <div class="start-action">
-        <h3 style="margin-top:0; text-align:center;">User Identity</h3>
-        
+        <h3>🎟️ Ticket booth</h3>
         <form action="/survey" method="post">
-            <input type="text" name="name" placeholder="Full Name" required>
+            <input type="text" name="name" placeholder="Your name (never stored!)" required>
             <input type="number" name="age" placeholder="Age" required>
             <select name="gender" required>
                 <option value="" disabled selected>Select Gender</option>
@@ -138,21 +75,20 @@
             </select>
 
             <div class="consent-box">
-                <label style="display: flex; align-items: flex-start; cursor: pointer;">
-                    <input type="checkbox" name="consent" required style="margin-top: 4px; margin-right: 10px;">
-                    <span style="font-size: 0.85em; color: #444;">
-                        I agree to the <strong>Data Privacy Terms</strong>. I understand my data is pseudonymized for research purposes.
-                    </span>
+                <label style="display:flex; align-items:flex-start; cursor:pointer;">
+                    <input type="checkbox" name="consent" required style="margin-top:4px; margin-right:10px; width:auto">
+                    <span>I agree to the <strong>Data Privacy Terms</strong>. My name vanishes
+                    into the void after submission — only anonymized stats remain. 🫥</span>
                 </label>
             </div>
 
-            <button type="submit">Step Onto the Path</button>
+            <button type="submit">Slide down the rabbit hole 🐰</button>
 
             <div class="privacy-hint">
-                <strong>Compliance:</strong> Per UAE Law No. 45/2021, names are removed after submission. Age/Gender are kept for anonymized statistical analysis. 🔒 Securely stored.
+                <strong>The serious bit:</strong> per UAE Law No. 45/2021, names are removed after
+                submission. Age/gender stay for anonymized statistics. 🔒
             </div>
         </form>
     </div>
-
 </body>
 </html>

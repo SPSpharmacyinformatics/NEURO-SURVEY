@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block title %}EQ Test{% endblock %}
 {% block body %}
-<h2 class="center">Empathy Quotient</h2>
-<p class="muted center">Choose how strongly you agree with each statement.</p>
+<h1 class="center">💘 EQ Test</h1>
+<p class="muted center">How strongly do you agree with each one?</p>
 <form method="post" action="{{ url_for('eq_result') }}">
-    <label class="muted">Age (for anonymized norms)</label>
+    <label class="muted">Age (anonymous, promise)</label>
     <input type="number" name="age" min="10" max="99">
     {% set ns = namespace(i=0) %}
     {% for text, key, sub in items %}
@@ -17,6 +17,6 @@
     </div>
     {% set ns.i = ns.i + 1 %}
     {% endfor %}
-    <div class="center"><button class="btn">See My EQ</button></div>
+    <div class="center"><button class="btn">Reveal my empathy powers! 🔮</button></div>
 </form>
 {% endblock %}

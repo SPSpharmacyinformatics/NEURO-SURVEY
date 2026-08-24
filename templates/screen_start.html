@@ -1,24 +1,27 @@
 {% extends "base.html" %}
+{% from "_blip.html" import blip %}
 {% block title %}Clinical Screen{% endblock %}
 {% block body %}
 <div class="center">
-    <h1>Full Clinical Screen</h1>
-    <p class="muted">{{ total }} sections, in a fixed linear progression. Answer honestly —
-    there are no right answers, and results are stored without your name.</p>
+    <h1>🎢 The Grand Tour</h1>
+    <p class="muted" style="color:#eaf2ff">{{ total }} stops of honest self-reflection.</p>
 </div>
+
+{{ blip("happy", "Rule number one: there are no wrong answers. Rule number two: snacks help.") }}
+
 <div class="card">
-    <h2>Before we begin</h2>
-    <p class="muted">Age and gender are kept only for anonymized statistics.
-    No name is ever recorded (UAE Law No. 45/2021).</p>
+    <h2>Ticket booth 🎟️</h2>
+    <p class="muted">Age and gender are kept only for anonymous statistics.
+    Your name? We don't even ask — Blip forgets faces instantly. 🫥</p>
     <form method="post" action="{{ url_for('screen_start') }}">
-        <label class="muted">Age</label>
+        <label class="muted">How many years have you been alive?</label>
         <input type="number" name="age" min="10" max="99" required>
         <label class="muted">Gender</label>
         <select name="gender" required>
-            <option value="" disabled selected>Select</option>
+            <option value="" disabled selected>Pick one</option>
             <option>Male</option><option>Female</option><option>Other</option>
         </select>
-        <div style="margin-top:14px"><button class="btn">Begin</button></div>
+        <div style="margin-top:14px"><button class="btn">All aboard! 🚂</button></div>
     </form>
 </div>
 {% endblock %}

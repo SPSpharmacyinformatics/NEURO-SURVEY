@@ -2,20 +2,34 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assessment</title>
+    <title>Slider Fiesta</title>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; background: #0d253f; color: white; padding: 15px; }
-        .q-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #f1c40f; }
-        .q-title { font-weight: bold; font-size: 1.1em; color: #f1c40f; }
-        .q-text { display: block; margin: 8px 0; color: #ccc; font-size: 0.9em; }
-        input[type=range] { width: 100%; margin: 15px 0; accent-color: #f1c40f; }
-        .logic-label { font-style: italic; font-size: 0.85em; color: #f1c40f; min-height: 2.4em; display: block; }
-        .sticky-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #111; padding: 15px; text-align: center; }
-        button { padding: 12px 40px; background: #f1c40f; color: #0d253f; border: none; border-radius: 25px; font-weight: bold; }
+        :root { --ink:#1a1a2e; --paper:#fffdf5; --gold:#ffd93d; }
+        body { font-family:"Baloo 2","Comic Sans MS",system-ui,sans-serif; color:var(--ink);
+               background:linear-gradient(-45deg,#6a11cb,#2575fc,#00b09b);
+               background-size:400% 400%; animation:bgshift 16s ease infinite;
+               padding:18px 15px 100px; margin:0; }
+        @keyframes bgshift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        h1 { color:white; text-align:center; transform:rotate(-1deg); text-shadow:0 2px 0 rgba(0,0,0,.2); }
+        .q-card { background:var(--paper); padding:18px; border-radius:18px; margin-bottom:18px;
+                  border:3px solid var(--ink); box-shadow:5px 5px 0 rgba(26,26,46,.35); }
+        .q-title { font-weight:800; font-size:1.05em; display:block; }
+        .q-text { display:block; margin:6px 0; color:#5a6270; font-size:.9em; }
+        input[type=range] { width:100%; margin:14px 0; accent-color:#ff5da2; }
+        .logic-label { font-style:italic; font-size:.88em; color:#ff5da2; min-height:2.4em;
+                       display:block; font-weight:700; }
+        .sticky-footer { position:fixed; bottom:0; left:0; width:100%; padding:14px;
+                         text-align:center; background:rgba(255,253,245,.95); border-top:3px solid var(--ink); }
+        button { padding:14px 44px; background:var(--gold); color:var(--ink); border:3px solid var(--ink);
+                 border-radius:999px; font-weight:800; font-size:1.05em; font-family:inherit;
+                 cursor:pointer; box-shadow:4px 4px 0 var(--ink); }
+        button:hover { transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--ink); }
     </style>
 </head>
 <body>
-    <form action="/submit" method="post" style="padding-bottom: 80px;">
+    <h1>🎚️ Slider Fiesta</h1>
+    <form action="/submit" method="post" style="padding-bottom:80px;">
         <input type="hidden" name="name" value="{{name}}">
         <input type="hidden" name="age" value="{{age}}">
         <input type="hidden" name="gender" value="{{gender}}">
@@ -24,47 +38,34 @@
 <div class="q-card">
     <span class="q-title">{{key}}</span>
     <span class="q-text">{{val.q}}</span>
-    
+
     <span class="logic-label" id="desc-{{loop.index}}">
         {{val.mid}} (Score: 2)
     </span>
-    
-    <input type="range" 
-           name="{{key}}" 
-           min="0" max="8" value="2" 
+
+    <input type="range"
+           name="{{key}}"
+           min="0" max="8" value="2"
            step="1"
            oninput="updateLogic(this, 'desc-{{loop.index}}', '{{val.low|replace("'", "\\'")}}', '{{val.mid|replace("'", "\\'")}}', '{{val.high|replace("'", "\\'")}}')">
 </div>
 {% endfor %}
 
-
         <div class="sticky-footer">
-            <button type="submit">Complete Mapping</button>
+            <button type="submit">Reveal my wiggles! 🎉</button>
         </div>
     </form>
-
 
 <script>
 function updateLogic(slider, targetId, low, mid, high) {
     let val = parseInt(slider.value);
     let target = document.getElementById(targetId);
     let text = "";
-    
-    // Logic mapping
-    if (val <= 2) {
-        text = low;
-    } else if (val <= 5) {
-        text = mid;
-    } else {
-        text = high;
-    }
-    
-    // Update the UI
-    if (target) {
-        target.innerText = text + " (Score: " + val + ")";
-    }
+    if (val <= 2) { text = low; }
+    else if (val <= 5) { text = mid; }
+    else { text = high; }
+    if (target) { target.innerText = text + " (Score: " + val + ")"; }
 }
 </script>
-
 </body>
 </html>

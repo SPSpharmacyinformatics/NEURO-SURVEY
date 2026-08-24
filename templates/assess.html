@@ -1,39 +1,46 @@
 {% extends "base.html" %}
+{% from "_blip.html" import blip %}
 {% block title %}Omni Assessment — NEURO-SURVEY{% endblock %}
 {% block body %}
 <div class="center">
-    <h1>Omni Assessment</h1>
-    <p class="muted">Clinical-grade screening, cognition, and empathy — in one linear journey.</p>
+    <h1>🎪 The Brain Circus</h1>
+    <p class="muted" style="color:#eaf2ff">Step right up! Real clinical science wearing a party hat.</p>
 </div>
 
-<div class="card">
-    <h2>🧠 Full Clinical Screen</h2>
-    <p class="muted">A linear progression through 8 validated instruments used by clinical psychologists:
-    PHQ-9 (depression), GAD-7 (anxiety), ASRS v1.1 (ADHD), AQ-10 (autism), MDQ (bipolar spectrum),
-    PC-PTSD-5 (trauma), IPIP-50 (Big Five) and DSM-5-TR personality trait domains.
-    ~15 minutes. Every domain is scored against published cutoffs.</p>
-    <a class="btn" href="{{ url_for('screen_start') }}">Start Clinical Screen</a>
+{{ blip("happy", "Pick an adventure! I'll be right here the whole time 👀") }}
+
+<div class="card wobble">
+    <span class="sticker">MAIN ATTRACTION 🎢</span>
+    <h2>The Grand Tour of Your Brain</h2>
+    <p class="muted">8 stops, zero judgment: Mood-O-Meter, Worry Radar, Squirrel Detector (ADHD),
+    Pattern-Brain (Autism), Upside-Down Moods, Trauma Check, and the two-part Personality Carnival.
+    Every stop uses real clinical instruments with real cutoffs.</p>
+    <p class="muted">⏱️ ~15 min · 🍿 bring snacks</p>
+    <a class="btn" href="{{ url_for('screen_start') }}">Buckle up! 🎢</a>
 </div>
 
 <div class="grid">
-    <div class="card">
-        <h2>📐 IQ Assessment</h2>
-        <p class="muted">Cognitive ability across CHC domains — Fluid Reasoning, Verbal,
-        Working Memory, Visual-Spatial, Quantitative, Processing Speed.
-        Standard score (mean 100, SD 15). ~12 minutes.</p>
-        <a class="btn secondary" href="{{ url_for('iq_intro') }}">Take IQ Test</a>
+    <div class="card wobble">
+        <span class="sticker" style="background:var(--teal)">BIG BRAIN ZONE 🏋️</span>
+        <h2>The IQ Olympics</h2>
+        <p class="muted">Puzzles! Patterns! Digits that vanish! Six official thinking-muscles
+        (CHC domains), one shiny standard score. No calculators, no cheating, no pressure.
+        Okay, tiny pressure.</p>
+        <a class="btn secondary" href="{{ url_for('iq_intro') }}">Lift weights 🧠💪</a>
     </div>
-    <div class="card">
-        <h2>❤️ EQ Assessment</h2>
-        <p class="muted">Empathy Quotient across three subscales: Cognitive Empathy,
-        Emotional Reactivity, Social Skills. 40 items, ~8 minutes.</p>
-        <a class="btn secondary" href="{{ url_for('eq_intro') }}">Take EQ Test</a>
+    <div class="card wobble">
+        <span class="sticker" style="background:var(--pink); color:white">FEELINGS LAB 💘</span>
+        <h2>The EQ Detector</h2>
+        <p class="muted">How well do you read the humans around you? Three superpowers measured:
+        mind-reading, heart-echoing, and smooth-talking.</p>
+        <a class="btn secondary" href="{{ url_for('eq_intro') }}">Detect feelings 🔍</a>
     </div>
 </div>
 
-<div class="card">
-    <h2>⚡ Quick Map</h2>
-    <p class="muted">The original 17-parameter neurodiversity self-map with the community World View.</p>
-    <a class="btn secondary" href="{{ url_for('quick_map') }}">Open Quick Map</a>
+<div class="card wobble">
+    <span class="sticker" style="background:var(--grape); color:white">CLASSIC 🗺️</span>
+    <h2>The Original Wiggly Map</h2>
+    <p class="muted">17 sliders of self-discovery + the community World View. The one that started it all.</p>
+    <a class="btn secondary" href="{{ url_for('quick_map') }}">Get wiggly 🐛</a>
 </div>
 {% endblock %}

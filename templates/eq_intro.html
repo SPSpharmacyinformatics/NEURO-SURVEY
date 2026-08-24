@@ -1,16 +1,17 @@
 {% extends "base.html" %}
+{% from "_blip.html" import blip %}
 {% block title %}EQ Assessment{% endblock %}
 {% block body %}
 <div class="center">
-    <h1>Empathy Quotient</h1>
-    <p class="muted">Based on the Empathy Quotient framework (Baron-Cohen et al.),
-    scored across three subscales:</p>
+    <h1>💘 The Feelings Detector</h1>
+    <p class="muted" style="color:#eaf2ff">How fluent are you in Human? Three superpowers await:</p>
 </div>
+{{ blip("happy", "Answer as you ACTUALLY are, not as your LinkedIn claims. 😄") }}
 <div class="card">
-    <p>🧩 <b>Cognitive Empathy</b> — reading minds: inferring what others think and intend</p>
-    <p>💗 <b>Emotional Reactivity</b> — feeling with others, being moved by their state</p>
-    <p>🤝 <b>Social Skills</b> — translating empathy into smooth interaction</p>
-    <p class="muted">40 items, ~8 minutes. Answer as you generally are, not as you'd like to be.</p>
-    <a class="btn" href="{{ url_for('eq_test') }}">Begin</a>
+    <p>🧩 <b>Mind-Reader</b> (Cognitive Empathy) — inferring what humans think and intend</p>
+    <p>💗 <b>Heart-Echo</b> (Emotional Reactivity) — feeling what others feel</p>
+    <p>🤝 <b>Smooth-Talker</b> (Social Skills) — turning empathy into actual conversations</p>
+    <p class="muted">40 items, ~8 minutes.</p>
+    <a class="btn" href="{{ url_for('eq_test') }}">Start detecting 🔍</a>
 </div>
 {% endblock %}

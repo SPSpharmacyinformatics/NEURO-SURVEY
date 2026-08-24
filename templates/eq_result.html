@@ -1,25 +1,33 @@
 {% extends "base.html" %}
+{% from "_blip.html" import blip %}
 {% block title %}EQ Result{% endblock %}
 {% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>{% endblock %}
 {% block body %}
 <div class="center">
-    <h1>{{ total }} / {{ total_max }}</h1>
-    <p style="color:var(--gold); font-size:1.2em">{{ band }}</p>
+    <span class="sticker">DETECTOR SAYS 🔮</span>
+    <h1 style="font-size:3.2em; margin:12px 0 0">{{ total }} / {{ total_max }}</h1>
+    <p style="color:var(--ink); font-size:1.3em; font-weight:800">{{ band }} 💘</p>
 </div>
+{% if total >= 47 %}
+{{ blip("wow", "Certified people-whisperer! 🦄") }}
+{% else %}
+{{ blip("happy", "Empathy is a muscle — every rep counts! 🏋️") }}
+{% endif %}
 <div class="card">
-    <h2>Your subscales</h2>
+    <h2>Superpower breakdown</h2>
     {% for name, val in subs.items() %}
-    <div style="margin:10px 0">
+    <div style="margin:12px 0">
         <div style="display:flex;justify-content:space-between">
-            <span>{{ name }}</span><b>{{ val }} / {{ subsmax[name] }}</b>
+            <b>{{ name }}</b><b>{{ val }} / {{ subsmax[name] }}</b>
         </div>
         <div class="progress"><div style="width:{{ (val / subsmax[name] * 100)|round(0) }}%"></div></div>
     </div>
     {% endfor %}
-    <p class="muted">Population averages on the EQ are roughly 42 (men) and 47 (women).
-    Empathy is a skill — all three subscales respond to practice.</p>
+    <p class="muted">Population averages on the classic EQ: ~42 (men), ~47 (women).
+    Good news: all three superpowers level up with practice. 🎮</p>
 </div>
 <div class="center">
-    <a class="btn" href="{{ url_for('index') }}">Back to Omni Assessment</a>
+    <a class="btn" href="{{ url_for('index') }}">Back to the circus 🎪</a>
 </div>
+<script>party({{ 80 if total >= 47 else 40 }});</script>
 {% endblock %}

@@ -1,25 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Discovery Map</title>
+    <title>Your Wiggly Result</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; background: #0d253f; color: white; text-align: center; padding: 15px; }
-        .result-card { 
-            background: rgba(241, 196, 15, 0.15); 
-            border: 2px solid #f1c40f; 
-            padding: 20px; border-radius: 15px; margin-bottom: 20px; 
-        }
-        .result-title { font-size: 1.4em; color: #f1c40f; font-weight: bold; margin-bottom: 5px; }
-        .result-desc { font-size: 0.9em; color: #ccc; line-height: 1.4; }
-        .chart-box { background: white; padding: 10px; border-radius: 20px; margin-top: 10px; }
-        .disclaimer { font-size: 0.7em; color: #666; margin-top: 15px; font-style: italic; }
+        :root { --ink:#1a1a2e; --paper:#fffdf5; --gold:#ffd93d; }
+        body { font-family:"Baloo 2","Comic Sans MS",system-ui,sans-serif; color:var(--ink);
+               text-align:center; padding:20px 15px; margin:0;
+               background:linear-gradient(-45deg,#2575fc,#6a11cb,#ff5da2);
+               background-size:400% 400%; animation:bgshift 16s ease infinite; }
+        @keyframes bgshift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        .result-card { background:var(--paper); border:3px solid var(--ink); padding:22px;
+                       border-radius:20px; margin-bottom:20px; box-shadow:6px 6px 0 rgba(26,26,46,.35); }
+        .result-title { font-size:1.5em; font-weight:800; margin-bottom:5px; }
+        .result-desc { font-size:.95em; color:#5a6270; line-height:1.45; }
+        .chart-box { background:var(--paper); padding:12px; border:3px solid var(--ink);
+                     border-radius:20px; margin-top:10px; display:inline-block; }
+        .disclaimer { font-size:.72em; color:#f0f4ff; margin-top:16px; font-style:italic; }
+        a.btn { display:inline-block; margin:16px 6px 0; padding:12px 26px; border:3px solid var(--ink);
+                border-radius:999px; text-decoration:none; font-weight:800; color:var(--ink);
+                box-shadow:4px 4px 0 var(--ink); }
+        a.gold { background:var(--gold); } a.purple { background:#e0d5ff; }
+        .mascot { font-size:44px; }
     </style>
 </head>
 <body>
-    <p style="margin-bottom:5px;">Analysis for {{name}} ({{age}})</p>
-    
+    <div class="mascot">🎉🧠🎉</div>
+    <p style="color:white; font-weight:700;">Analysis for {{name}} ({{age}})</p>
+
     <div class="result-card">
         <div class="result-title">{{profile_title}}</div>
         <div class="result-desc">{{profile_desc}}</div>
@@ -29,8 +39,10 @@
         <canvas id="radarChart"></canvas>
     </div>
 
-    <p class="disclaimer">Note: This engine provides a logical classification based on user-reported intensities. It is a tool for self-discovery and not a clinical diagnosis.</p>
-    <a href="/" style="color:#f1c40f; text-decoration:none; display:block; margin-top:20px;">← Start New Assessment</a>
+    <p class="disclaimer">Note: this engine provides a logical classification based on
+    self-reported intensities. It is a tool for self-discovery, not a clinical diagnosis. ☝️</p>
+    <a class="btn gold" href="/">← New assessment</a>
+    <a class="btn purple" href="/world-view">See the World View 🌍</a>
 
     <script>
         new Chart(document.getElementById('radarChart'), {
@@ -40,32 +52,36 @@
                 datasets: [{
                     label: 'Your Map',
                     data: {{ scores|tojson }},
-                    borderColor: '#3498db',
-                    backgroundColor: 'rgba(52, 152, 219, 0.4)',
+                    borderColor: '#ff5da2',
+                    backgroundColor: 'rgba(255, 93, 162, 0.35)',
                     borderWidth: 3
                 }, {
                     label: 'Baseline',
                     data: Array({{ labels|length }}).fill(2),
-                    borderColor: 'rgba(231, 76, 60, 0.5)',
+                    borderColor: 'rgba(26, 26, 46, 0.45)',
                     borderDash: [5, 5],
                     fill: false,
                     pointRadius: 0
                 }]
             },
             options: {
-                scales: {
-                    r: {
-                        min: 0, max: 8,
-                        ticks: { display: false },
-                        pointLabels: { color: '#0d253f', font: { size: 9, weight: 'bold' } }
-                    }
-                },
+                scales: { r: { min: 0, max: 8, ticks: { display: false },
+                         pointLabels: { color: '#1a1a2e', font: { size: 9, weight: 'bold' } } } },
                 plugins: { legend: { display: false } }
             }
         });
+        (function(){ // confetti
+            const bits=["🎉","⭐","🎊","💛","🧠","🌈","✨"];
+            for(let i=0;i<70;i++){const s=document.createElement("span");
+            s.textContent=bits[Math.floor(Math.random()*bits.length)];
+            s.style.cssText="position:fixed;z-index:99;font-size:22px;pointer-events:none;left:"+
+            Math.random()*100+"vw;top:-5vh;animation:fall linear forwards;animation-duration:"+
+            (2+Math.random()*2.5)+"s;animation-delay:"+Math.random()*0.8+"s";
+            document.body.appendChild(s);setTimeout(()=>s.remove(),5500);}
+            const st=document.createElement("style");
+            st.textContent="@keyframes fall{to{transform:translateY(105vh) rotate(720deg);opacity:.7}}";
+            document.head.appendChild(st);
+        })();
     </script>
 </body>
 </html>
-<a href="/world-view" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background: #6a11cb; color: white; border-radius: 25px; text-decoration: none; font-weight: bold;">
-    See the World View
-</a>

@@ -3,28 +3,27 @@
 {% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>{% endblock %}
 {% block body %}
 <div class="center">
-    <h1>{{ iq }}</h1>
-    <p style="color:var(--gold); font-size:1.2em">{{ band }}</p>
+    <span class="sticker">DRUMROLL PLEASE 🥁</span>
+    <h1 style="font-size:3.4em; margin:14px 0 0">{{ iq }}</h1>
+    <p style="color:var(--ink); font-size:1.3em; font-weight:800">{{ band }} 🏆</p>
     <p class="muted">Standard score — population mean 100, SD 15</p>
 </div>
+{{ blip("wow", "Not bad, human. Not bad at all. 😎") if iq >= 110 else blip("happy", "Every brain is built different — this is one snapshot, not your ceiling! 🌱") }}
 <div class="card">
-    <h2>CHC domain profile</h2>
-    <div class="grid">
+    <h2>Muscle report 🏋️</h2>
     {% for code, d in domains.items() %}
-        <div>
-            <div style="display:flex;justify-content:space-between">
-                <b>{{ code }}</b><span>{{ d.standard }} · {{ d.band }}</span>
-            </div>
-            <div class="progress"><div style="width:{{ ((d.standard - 55) / 90 * 100)|round(0) }}%"></div></div>
+    <div style="margin:10px 0">
+        <div style="display:flex;justify-content:space-between">
+            <b>{{ code }}</b><span>{{ d.standard }} · {{ d.band }}</span>
         </div>
-    {% endfor %}
+        <div class="progress"><div style="width:{{ ((d.standard - 55) / 90 * 100)|round(0) }}%"></div></div>
     </div>
-    <p class="muted">This is an educational estimate from a short online battery —
-    it is not a substitute for an individually administered assessment
-    (e.g. WAIS, WJ-V). Scores are most meaningful alongside real-world
-    functioning.</p>
+    {% endfor %}
+    <p class="muted">Educational estimate from a short online battery — not a substitute for a
+    real individually-administered assessment (WAIS, WJ-V). Brains are more than one number! 🎈</p>
 </div>
 <div class="center">
-    <a class="btn" href="{{ url_for('index') }}">Back to Omni Assessment</a>
+    <a class="btn" href="{{ url_for('index') }}">Back to the circus 🎪</a>
 </div>
+<script>party({{ 90 if iq >= 120 else 50 }});</script>
 {% endblock %}

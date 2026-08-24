@@ -1,0 +1,23 @@
+{% macro blip(mood="happy", say="Hi, I'm Blip! 🧠") %}
+<div class="mascot">
+    <svg width="74" height="74" viewBox="0 0 100 100">
+        <path d="M50 6 C78 6 92 24 92 46 C92 72 74 92 50 92 C26 92 8 72 8 46 C8 24 22 6 50 6 Z"
+              fill="{{ '#ffd93d' if mood=='happy' else '#a78bfa' if mood=='wow' else '#4ecdc4' }}"
+              stroke="#1a1a2e" stroke-width="4"/>
+        <path d="M30 20 C40 8 60 8 70 20" fill="none" stroke="#1a1a2e" stroke-width="3"/>
+        {% if mood == "wow" %}
+        <circle cx="36" cy="42" r="7" fill="white" stroke="#1a1a2e" stroke-width="3"/>
+        <circle cx="64" cy="42" r="7" fill="white" stroke="#1a1a2e" stroke-width="3"/>
+        <circle cx="36" cy="42" r="2.6" fill="#1a1a2e"/><circle cx="64" cy="42" r="2.6" fill="#1a1a2e"/>
+        <ellipse cx="50" cy="66" rx="7" ry="9" fill="#1a1a2e"/>
+        {% else %}
+        <path d="M28 40 Q34 32 40 40" fill="none" stroke="#1a1a2e" stroke-width="4" stroke-linecap="round"/>
+        <path d="M60 40 Q66 32 72 40" fill="none" stroke="#1a1a2e" stroke-width="4" stroke-linecap="round"/>
+        <path d="M36 62 Q50 76 64 62" fill="none" stroke="#1a1a2e" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="24" cy="54" r="5" fill="#ff5da2" opacity=".6"/>
+        <circle cx="76" cy="54" r="5" fill="#ff5da2" opacity=".6"/>
+        {% endif %}
+    </svg>
+    <div class="bubble">{{ say }}</div>
+</div>
+{% endmacro %}
