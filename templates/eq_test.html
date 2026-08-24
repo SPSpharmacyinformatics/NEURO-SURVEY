@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}EQ Test{% endblock %}
+{% block body %}
+<h2 class="center">Empathy Quotient</h2>
+<p class="muted center">Choose how strongly you agree with each statement.</p>
+<form method="post" action="{{ url_for('eq_result') }}">
+    <label class="muted">Age (for anonymized norms)</label>
+    <input type="number" name="age" min="10" max="99">
+    {% set ns = namespace(i=0) %}
+    {% for text, key, sub in items %}
+    <div class="q-item">
+        <p>{{ loop.index }}. {{ text }}</p>
+        {% for s in scale %}
+        <label class="opt"><input type="radio" name="eq_{{ ns.i }}"
+               value="{{ loop.index0 }}" {% if loop.index0 == 1 %}required{% endif %}> {{ s }}</label>
+        {% endfor %}
+    </div>
+    {% set ns.i = ns.i + 1 %}
+    {% endfor %}
+    <div class="center"><button class="btn">See My EQ</button></div>
+</form>
+{% endblock %}

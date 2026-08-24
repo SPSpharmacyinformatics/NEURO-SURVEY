@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}EQ Assessment{% endblock %}
+{% block body %}
+<div class="center">
+    <h1>Empathy Quotient</h1>
+    <p class="muted">Based on the Empathy Quotient framework (Baron-Cohen et al.),
+    scored across three subscales:</p>
+</div>
+<div class="card">
+    <p>🧩 <b>Cognitive Empathy</b> — reading minds: inferring what others think and intend</p>
+    <p>💗 <b>Emotional Reactivity</b> — feeling with others, being moved by their state</p>
+    <p>🤝 <b>Social Skills</b> — translating empathy into smooth interaction</p>
+    <p class="muted">40 items, ~8 minutes. Answer as you generally are, not as you'd like to be.</p>
+    <a class="btn" href="{{ url_for('eq_test') }}">Begin</a>
+</div>
+{% endblock %}

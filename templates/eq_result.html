@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}EQ Result{% endblock %}
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>{% endblock %}
+{% block body %}
+<div class="center">
+    <h1>{{ total }} / {{ total_max }}</h1>
+    <p style="color:var(--gold); font-size:1.2em">{{ band }}</p>
+</div>
+<div class="card">
+    <h2>Your subscales</h2>
+    {% for name, val in subs.items() %}
+    <div style="margin:10px 0">
+        <div style="display:flex;justify-content:space-between">
+            <span>{{ name }}</span><b>{{ val }} / {{ subsmax[name] }}</b>
+        </div>
+        <div class="progress"><div style="width:{{ (val / subsmax[name] * 100)|round(0) }}%"></div></div>
+    </div>
+    {% endfor %}
+    <p class="muted">Population averages on the EQ are roughly 42 (men) and 47 (women).
+    Empathy is a skill — all three subscales respond to practice.</p>
+</div>
+<div class="center">
+    <a class="btn" href="{{ url_for('index') }}">Back to Omni Assessment</a>
+</div>
+{% endblock %}

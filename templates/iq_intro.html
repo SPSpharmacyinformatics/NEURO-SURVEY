@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}IQ Assessment{% endblock %}
+{% block body %}
+<div class="center">
+    <h1>Cognitive Ability Assessment</h1>
+    <p class="muted">Structured on the Cattell-Horn-Carroll (CHC) framework — the same
+    theory behind the WJ-V and WAIS batteries.</p>
+</div>
+<div class="card">
+    <h2>Domains measured</h2>
+    {% for code, name, desc in domains %}
+    <p><b style="color:var(--gold)">{{ code }}</b> — {{ name }} <span class="muted">({{ desc }})</span></p>
+    {% endfor %}
+    <p class="muted">Includes an interactive digit-span (working memory) and a timed
+    symbol-search (processing speed). Allow ~{{ minutes }} minutes in one sitting, without
+    distractions, calculators, or search engines.</p>
+    <a class="btn" href="{{ url_for('iq_test') }}">Begin</a>
+</div>
+{% endblock %}

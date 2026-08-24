@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}IQ Result{% endblock %}
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>{% endblock %}
+{% block body %}
+<div class="center">
+    <h1>{{ iq }}</h1>
+    <p style="color:var(--gold); font-size:1.2em">{{ band }}</p>
+    <p class="muted">Standard score — population mean 100, SD 15</p>
+</div>
+<div class="card">
+    <h2>CHC domain profile</h2>
+    <div class="grid">
+    {% for code, d in domains.items() %}
+        <div>
+            <div style="display:flex;justify-content:space-between">
+                <b>{{ code }}</b><span>{{ d.standard }} · {{ d.band }}</span>
+            </div>
+            <div class="progress"><div style="width:{{ ((d.standard - 55) / 90 * 100)|round(0) }}%"></div></div>
+        </div>
+    {% endfor %}
+    </div>
+    <p class="muted">This is an educational estimate from a short online battery —
+    it is not a substitute for an individually administered assessment
+    (e.g. WAIS, WJ-V). Scores are most meaningful alongside real-world
+    functioning.</p>
+</div>
+<div class="center">
+    <a class="btn" href="{{ url_for('index') }}">Back to Omni Assessment</a>
+</div>
+{% endblock %}

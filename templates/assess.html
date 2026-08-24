@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Omni Assessment — NEURO-SURVEY{% endblock %}
+{% block body %}
+<div class="center">
+    <h1>Omni Assessment</h1>
+    <p class="muted">Clinical-grade screening, cognition, and empathy — in one linear journey.</p>
+</div>
+
+<div class="card">
+    <h2>🧠 Full Clinical Screen</h2>
+    <p class="muted">A linear progression through 8 validated instruments used by clinical psychologists:
+    PHQ-9 (depression), GAD-7 (anxiety), ASRS v1.1 (ADHD), AQ-10 (autism), MDQ (bipolar spectrum),
+    PC-PTSD-5 (trauma), IPIP-50 (Big Five) and DSM-5-TR personality trait domains.
+    ~15 minutes. Every domain is scored against published cutoffs.</p>
+    <a class="btn" href="{{ url_for('screen_start') }}">Start Clinical Screen</a>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <h2>📐 IQ Assessment</h2>
+        <p class="muted">Cognitive ability across CHC domains — Fluid Reasoning, Verbal,
+        Working Memory, Visual-Spatial, Quantitative, Processing Speed.
+        Standard score (mean 100, SD 15). ~12 minutes.</p>
+        <a class="btn secondary" href="{{ url_for('iq_intro') }}">Take IQ Test</a>
+    </div>
+    <div class="card">
+        <h2>❤️ EQ Assessment</h2>
+        <p class="muted">Empathy Quotient across three subscales: Cognitive Empathy,
+        Emotional Reactivity, Social Skills. 40 items, ~8 minutes.</p>
+        <a class="btn secondary" href="{{ url_for('eq_intro') }}">Take EQ Test</a>
+    </div>
+</div>
+
+<div class="card">
+    <h2>⚡ Quick Map</h2>
+    <p class="muted">The original 17-parameter neurodiversity self-map with the community World View.</p>
+    <a class="btn secondary" href="{{ url_for('quick_map') }}">Open Quick Map</a>
+</div>
+{% endblock %}

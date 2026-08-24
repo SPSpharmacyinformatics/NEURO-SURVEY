@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Screen Results{% endblock %}
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>{% endblock %}
+{% block body %}
+<div class="center"><h1>Your Clinical Screen</h1></div>
+
+{% if flags %}
+<div class="card" style="border:1px solid var(--warn)">
+    <h2>Areas flagged for follow-up</h2>
+    {% for title, instrument in flags %}
+        <p>⚠️ <b>{{ title }}</b> — scored at or above the clinical threshold on {{ instrument }}.</p>
+    {% endfor %}
+    <p class="muted">A flag is not a diagnosis. It means a conversation with a clinical
+    psychologist about this area would be worthwhile.</p>
+</div>
+{% else %}
+<div class="card">
+    <h2>No thresholds crossed</h2>
+    <p class="muted">None of the instruments crossed their published clinical cutoffs today.</p>
+</div>
+{% endif %}
+
+<h2>Domain detail</h2>
+{% for section, r in pairs %}
+<div class="card">
+    <div class="row" style="display:flex;justify-content:space-between;align-items:center">
+        <b>{{ section.title }}</b>
+        {% if r.band in ('Moderate','Severe','Moderately severe') or r.flag %}
+            <span class="badge {{ 'alarm' if r.band in ('Severe',) else 'flag' }}">{{ r.band }}</span>
+        {% else %}
+            <span class="badge {{ r.level if r.level else 'ok' }}">{{ r.band }}</span>
+        {% endif %}
+    </div>
+    <p class="muted">{{ r.score }}{% if r.max %}/{{ r.max }}{% endif %} · {{ section.instrument }}</p>
+    {% if r.domains %}
+        <div class="grid">
+        {% for dom, val in r.domains.items() %}
+            <div class="muted">{{ dom }}: <b style="color:#f4f7f9">{{ val }}</b>{{ "/50" if section.id=="big5" else "/15" }}</div>
+        {% endfor %}
+        </div>
+    {% endif %}
+    <p class="muted" style="margin-top:8px">{{ r.note }}</p>
+</div>
+{% endfor %}
+
+<div style="text-align:center">
+    <a class="btn" href="{{ url_for('world_view') }}">Compare with the Community →</a>
+    <a class="btn secondary" href="{{ url_for('screen_start') }}">Retake</a>
+</div>
+{% endblock %}

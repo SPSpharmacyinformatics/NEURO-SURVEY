@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}IQ Test{% endblock %}
+{% block body %}
+<div class="progress"><div id="prog" style="width:0%"></div></div>
+<div id="stage" class="card"></div>
+<div id="done" class="card hidden center">
+    <h2>Assessment complete</h2>
+    <form id="ageForm">
+        <label class="muted">Age (for anonymized norms)</label>
+        <input type="number" name="age" min="10" max="99">
+        <div style="margin-top:12px"><button class="btn">Compute My Score</button></div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const RAW = {{ items | tojson }};
+const DIGIT = {{ digit | tojson }};
+const SYMBOL_SECONDS = {{ symbols }};
+let items = [];
+let answers = {};   // key -> bool
+let idx = 0;
+let digitSpan = { stage: DIGIT.start, phase: 'show', seq: [], input: '', best: 0, wrong: 0 };
+let symbol = { found: 0, timer: null, left: SYMBOL_SECONDS };
+
+function shapeSVG(shape, n) {
+    const r = 14; let out = '';
+    for (let i = 0; i < n; i++) {
+        const cx = 20 + i * (n > 2 ? 20 : 30);
+        if (shape === 'circle') out += `<circle cx="${cx}" cy="20" r="${r-4}" fill="#f1c40f"/>`;
+        if (shape === 'square') out += `<rect x="${cx - r + 4}" y="${20 - r + 4}" width="${2*r-8}" height="${2*r-8}" fill="#f1c40f"/>`;
+        if (shape === 'triangle') out += `<polygon points="${cx},${20 - r + 2} ${cx + r - 4},${20 + r - 2} ${cx - r + 4},${20 + r - 2}" fill="#f1c40f"/>`;
+    }
+    return `<svg width="${40 + n * 20}" height="40">${out}</svg>`;
+}
+
+function rotSVG(deg, size) {
+    return `<svg width="70" height="70"><g transform="rotate(${deg} 25 25)">
+        <polygon points="10,10 40,10 40,17 17,17 17,40 10,40" fill="#4cc2ff"/></g></svg>`;
+}
+
+function xorSVG(cells) {
+    let out = '';
+    const pos = [[10, 10], [30, 10], [10, 30], [30, 30]];
+    cells.forEach((c, i) => { if (c) out += `<circle cx="${pos[i][0]}" cy="${pos[i][1]}" r="7" fill="#2ecc71"/>`; });
+    return `<svg width="45" height="45" style="background:#0d253f;border-radius:6px">${out}</svg>`;
+}
+
+function polySVG(pts, w) {
+    return `<svg width="${w}" height="${w}"><polygon points="${pts.map(p => (p[0]*w/5+2)+','+(p[1]*w/5+2)).join(' ')}"
+        fill="rgba(76,194,255,.5)" stroke="#4cc2ff" stroke-width="2"/></svg>`;
+}
+
+function buildItems() {
+    let k = 0;
+    RAW.forEach(([kind, payload, domain]) => {
+        if (kind === 'matrix') {
+            const s = payload.spec;
+            let cells = '';
+            for (let i = 0; i < 8; i++) cells += `<div class="mcell">${shapeSVG(s.shapes[i], s.counts[i])}</div>`;
+            cells += '<div class="mcell q">?</div>';
+            let opts = s.options.map((o, i) =>
+                `<div class="opt" data-key="Gf:${k}" data-ok="${i === s.answer}">${shapeSVG(o.shape, o.count)}</div>`).join('');
+            items.push({ html: `<p>Which option completes the matrix?</p>
+                <div class="mgrid">${cells}</div><div class="optgrid">${opts}</div>`, key: `Gf:${k}` });
+        } else if (kind === 'rotation') {
+            const s = payload.spec;
+            let opts = s.options.map((deg, i) =>
+                `<div class="opt" data-key="Gv:${k}" data-ok="${i === s.answer}">${rotSVG(deg)}</div>`).join('');
+            items.push({ html: `<p>${payload.q}</p><p>Reference:</p>${polySVG(s.ref, 90)}
+                <div class="optgrid">${opts}</div>`, key: `Gv:${k}` });
+        } else if (kind === 'xor') {
+            const s = payload.spec;
+            let grid = '';
+            s.rows.forEach(row => { row.forEach(c => {
+                grid += `<div class="mcell">${c ? xorSVG(c) : '<div class="q">?</div>'}</div>`; }); });
+            let opts = s.options.map((o, i) =>
+                `<div class="opt" data-key="Gf:x${k}" data-ok="${i === s.answer}">${xorSVG(o)}</div>`).join('');
+            items.push({ html: `<p>Each row follows the same rule. What belongs in the gap?</p>
+                <div class="mgrid">${grid}</div><div class="optgrid">${opts}</div>`, key: `Gf:x${k}` });
+        } else if (kind === 'series') {
+            let opts = payload.options.map((o, i) =>
+                `<div class="opt" data-key="${payload.domain}:${k}" data-ok="${i === payload.answer}">${o}</div>`).join('');
+            items.push({ html: `<p>What comes next?</p><h2 style="letter-spacing:2px">${payload.q}</h2>
+                <div class="optgrid">${opts}</div>`, key: `${payload.domain}:${k}` });
+        }
+        k++;
+    });
+}
+
+const style = document.createElement('style');
+style.textContent = `
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:330px;margin:12px auto}
+.mcell{background:rgba(255,255,255,.06);border-radius:8px;display:flex;align-items:center;justify-content:center;min-height:56px}
+.mcell.q{border:2px dashed #f1c40f;color:#f1c40f;font-size:1.4em}
+.optgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:14px}
+.optgrid .opt{text-align:center;padding:10px}
+.opt.picked{outline:2px solid #f1c40f}
+.digitbox{font-size:2.2em;letter-spacing:12px;text-align:center;margin:20px 0;min-height:1.2em}`;
+document.head.appendChild(style);
+
+function render() {
+    const st = document.getElementById('stage');
+    document.getElementById('prog').style.width = (idx / (items.length + 2) * 100) + '%';
+    if (idx < items.length) {
+        st.innerHTML = items[idx].html;
+        st.querySelectorAll('.opt').forEach(el => el.onclick = () => {
+            answers[el.dataset.key] = el.dataset.ok === 'true';
+            idx++; render();
+        });
+    } else if (idx === items.length) {
+        digitSpan.phase = 'show'; digitSpan.seq = []; digitSpan.input = '';
+        nextDigitStage();
+    } else {
+        startSymbols();
+    }
+}
+
+function nextDigitStage() {
+    const st = document.getElementById('stage');
+    if (digitSpan.stage > DIGIT.max || digitSpan.wrong >= 2) { idx++; render(); return; }
+    digitSpan.seq = Array.from({length: digitSpan.stage}, () => Math.floor(Math.random() * 10));
+    st.innerHTML = `<p>Memorize the digits:</p><div class="digitbox" id="dbox"></div>`;
+    const box = document.getElementById('dbox');
+    let i = 0;
+    const t = setInterval(() => {
+        if (i < digitSpan.seq.length) { box.textContent = digitSpan.seq[i]; i++; }
+        else { clearInterval(t); box.textContent = ''; askDigits(); }
+    }, 900);
+}
+
+function askDigits() {
+    const st = document.getElementById('stage');
+    st.innerHTML += `<p>Now type them <b>in order</b>:</p>
+        <input type="text" id="dans" autocomplete="off" style="font-size:1.4em;text-align:center">
+        <div style="text-align:center;margin-top:12px"><button class="btn small" id="dok">Check</button></div>`;
+    document.getElementById('dans').focus();
+    document.getElementById('dok').onclick = () => {
+        const val = document.getElementById('dans').value.replace(/\D/g, '');
+        if (val === digitSpan.seq.join('')) {
+            digitSpan.best = Math.max(digitSpan.best, digitSpan.stage);
+            digitSpan.stage++;
+        } else { digitSpan.wrong++; }
+        nextDigitStage();
+    };
+}
+
+function startSymbols() {
+    const st = document.getElementById('stage');
+    const glyphs = '▲●■◆★✦⬟⬢';
+    st.innerHTML = `<p>Click every <b style="color:#f1c40f">▲</b> you see. Go fast!</p>
+        <h3 id="stimer">${symbol.left}s — found: <span id="scount">0</span></h3>
+        <div id="sfield" style="display:flex;flex-wrap:wrap;gap:4px;min-height:220px"></div>`;
+    const field = document.getElementById('sfield');
+    const spawn = () => {
+        const g = glyphs[Math.floor(Math.random() * glyphs.length)];
+        const s = document.createElement('span');
+        s.textContent = g; s.style.cssText = 'font-size:26px;cursor:pointer;padding:4px';
+        s.onclick = () => { if (g === '▲') { symbol.found++; document.getElementById('scount').textContent = symbol.found; } s.remove(); };
+        field.appendChild(s);
+        if (field.children.length > 40) field.firstChild.remove();
+    };
+    const spawner = setInterval(spawn, 120);
+    symbol.timer = setInterval(() => {
+        symbol.left--;
+        document.getElementById('stimer').textContent = symbol.left + 's — found: ' + symbol.found;
+        if (symbol.left <= 0) {
+            clearInterval(spawner); clearInterval(symbol.timer);
+            idx++; render();
+        }
+    }, 1000);
+}
+
+document.getElementById('ageForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const age = e.target.age.value;
+    const payload = { correct: answers, digits: digitSpan.best, symbols: symbol.found, age };
+    const r = await fetch('/iq/result', { method: 'POST',
+        headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+    document.open(); document.write(await r.text()); document.close();
+};
+
+buildItems();
+render();
+</script>
+{% endblock %}

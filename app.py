@@ -1,118 +1,18 @@
 import json
-import math
 import os
 import sqlite3
 
-from flask import Flask, render_template, request
+from flask import (Flask, render_template, request, redirect, url_for,
+                   session)
+
+from instruments import (SCREEN_SECTIONS, score_instrument, QUESTIONS,
+                         classify_profile)
+import iq_eq
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("NEURO_SECRET", "neuro-survey-local-key")
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'neuro_survey.db')
-
-QUESTIONS = {
-    "Executive Function": {
-        "q": "How hard is it to plan, start, and finish multi-step tasks?",
-        "low": "Tasks flow naturally with minimal friction",
-        "mid": "Occasional stalls that you can push through",
-        "high": "Starting and sequencing tasks feels like pushing a boulder",
-    },
-    "Sensory Sensitivity": {
-        "q": "How strongly do sounds, lights, textures, or crowds affect you?",
-        "low": "Background noise rarely registers",
-        "mid": "Certain environments become draining or irritating",
-        "high": "Everyday sensations can be overwhelming or painful",
-    },
-    "Social Energy": {
-        "q": "How much energy does socializing cost you?",
-        "low": "Socializing recharges you",
-        "mid": "Enjoyable but needs recovery time afterwards",
-        "high": "Even short interactions feel exhausting",
-    },
-    "Hyperfocus": {
-        "q": "How deeply can you lock into something that interests you?",
-        "low": "Attention stays flexible and easily redirected",
-        "mid": "Strong focus in bursts, on your own terms",
-        "high": "Hours vanish; interrupting feels physically jarring",
-    },
-    "Task Switching": {
-        "q": "How easy is it to jump between different activities?",
-        "low": "Switching contexts is smooth and cheap",
-        "mid": "A brief transition ritual is needed",
-        "high": "Switching tasks mid-flow feels genuinely distressing",
-    },
-    "Verbal Communication": {
-        "q": "How natural does spoken conversation feel?",
-        "low": "Words arrive easily in most settings",
-        "mid": "Fluent in comfort zones, harder elsewhere",
-        "high": "Finding words often takes deliberate effort",
-    },
-    "Reading Between the Lines": {
-        "q": "How easily do you read unspoken cues — tone, body language, subtext?",
-        "low": "Unspoken cues are usually clear",
-        "mid": "You catch most cues but miss subtle ones",
-        "high": "Implicit meanings often need explicit translation",
-    },
-    "Routine Dependence": {
-        "q": "How much do familiar routines and predictability matter?",
-        "low": "Spontaneity feels easy and fun",
-        "mid": "Prefer plans but adapt when needed",
-        "high": "Unexpected changes can derail the whole day",
-    },
-    "Special Interests": {
-        "q": "How intense and absorbing are your personal interests?",
-        "low": "Hobbies stay casual and varied",
-        "mid": "Deep dives that come and go in phases",
-        "high": "Core interests are a central, defining part of life",
-    },
-    "Pattern Recognition": {
-        "q": "How naturally do you spot systems, patterns, and details others miss?",
-        "low": "Big picture over details",
-        "mid": "Notice structures in familiar domains",
-        "high": "Details and patterns jump out automatically, everywhere",
-    },
-    "Emotional Regulation": {
-        "q": "How manageable are your emotional reactions in the moment?",
-        "low": "Feelings rise and settle smoothly",
-        "mid": "Occasional waves that need conscious handling",
-        "high": "Emotions can hit hard and linger or overflow",
-    },
-    "Rejection Sensitivity": {
-        "q": "How strongly does criticism or perceived rejection land?",
-        "low": "Feedback rolls off easily",
-        "mid": "Stings, but recovers within the day",
-        "high": "Even small perceived slights can feel devastating",
-    },
-    "Self-Regulation Movements": {
-        "q": "How much do repetitive movements or sounds (stimming) help you regulate?",
-        "low": "Rarely needed or noticed",
-        "mid": "Helpful in stressful moments",
-        "high": "An essential, constant part of self-regulation",
-    },
-    "Sleep Rhythm": {
-        "q": "How stable are your sleep and energy cycles?",
-        "low": "Predictable schedule and steady energy",
-        "mid": "Drifts with routine and stress",
-        "high": "Sleep is erratic, reversed, or hard to initiate",
-    },
-    "Masking Effort": {
-        "q": "How much energy goes into appearing 'typical' around others?",
-        "low": "You are essentially the same everywhere",
-        "mid": "Some conscious adjustment in certain company",
-        "high": "Constant performance that leaves you drained",
-    },
-    "Time Perception": {
-        "q": "How reliable is your internal sense of time?",
-        "low": "You run on an accurate internal clock",
-        "mid": "Time blurs occasionally",
-        "high": "Time is either 'now' or 'not now' — estimation fails often",
-    },
-    "Sensory Seeking": {
-        "q": "How much do you crave intense input — movement, pressure, sound, spice, speed?",
-        "low": "Calm and low-stimulation feels best",
-        "mid": "Enjoy intensity in chosen doses",
-        "high": "Actively seek strong sensations to feel regulated",
-    },
-}
 
 
 def get_db():
@@ -123,58 +23,47 @@ def get_db():
 
 def init_db():
     conn = get_db()
-    conn.execute("""
+    conn.executescript("""
         CREATE TABLE IF NOT EXISTS responses(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            age INTEGER,
-            gender TEXT,
-            scores TEXT NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
+            age INTEGER, gender TEXT, scores TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS screens(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            age INTEGER, gender TEXT, results TEXT NOT NULL,
+            flags TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS iq_results(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            age INTEGER, standard_score INTEGER, domains TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS eq_results(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            age INTEGER, total INTEGER, subscales TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
     """)
     conn.commit()
     conn.close()
 
 
-def classify_profile(scores):
-    avg = sum(scores) / len(scores)
-    variance = sum((s - avg) ** 2 for s in scores) / len(scores)
-    sd = math.sqrt(variance)
-    if sd >= 2.0:
-        return ("The Spiky Profile",
-                "Your scores vary dramatically across parameters. You have "
-                "pronounced peaks — areas of extraordinary intensity — alongside "
-                "deep valleys. This uneven 'spikiness' is a hallmark of "
-                "neurodivergent wiring, bringing both remarkable strengths and "
-                "real friction points.")
-    if avg >= 5.5:
-        return ("The High-Intensity Mind",
-                "Nearly every parameter runs hot. You experience the world at "
-                "high gain — intensely, vividly, and sometimes overwhelmingly. "
-                "Structure, recovery time, and self-advocacy are your key tools.")
-    if avg <= 2.5 and sd < 1.2:
-        return ("The Steady Baseline",
-                "Your responses cluster close to the standard baseline. Your "
-                "wiring is relatively typical for the current population average "
-                "— which, like every profile, is simply one variation of human.")
-    return ("The Balanced Explorer",
-            "Your profile shows moderate variation with no extreme peaks. You "
-            "move between worlds comfortably, though certain parameters still "
-            "cost you more energy than others.")
-
-
+# ---------------- home ----------------
 @app.route('/')
 def index():
+    return render_template('assess.html')
+
+
+# ---------------- original quick map ----------------
+@app.route('/quick-map')
+def quick_map():
     return render_template('index.html')
 
 
 @app.route('/survey', methods=['POST'])
 def survey():
-    name = request.form.get('name', '')
-    age = request.form.get('age', '')
-    gender = request.form.get('gender', '')
-    return render_template('survey.html', name=name, age=age,
-                           gender=gender, questions=QUESTIONS)
+    return render_template('survey.html',
+                           name=request.form.get('name', ''),
+                           age=request.form.get('age', ''),
+                           gender=request.form.get('gender', ''),
+                           questions=QUESTIONS)
 
 
 @app.route('/submit', methods=['POST'])
@@ -187,21 +76,16 @@ def submit():
             scores[key] = max(0, min(8, int(request.form.get(key, 2))))
         except (TypeError, ValueError):
             scores[key] = 2
-
     ordered = [scores[k] for k in QUESTIONS]
-    profile_title, profile_desc = classify_profile(ordered)
-
-    # Privacy: per UAE Law No. 45/2021 the name is never stored.
+    title, desc = classify_profile(ordered)
     conn = get_db()
     conn.execute("INSERT INTO responses(age, gender, scores) VALUES(?,?,?)",
-                 (int(age) if age.isdigit() else None,
+                 (int(age) if str(age).isdigit() else None,
                   request.form.get('gender', ''), json.dumps(scores)))
     conn.commit()
     conn.close()
-
     return render_template('results.html', name=name, age=age,
-                           profile_title=profile_title,
-                           profile_desc=profile_desc,
+                           profile_title=title, profile_desc=desc,
                            labels=list(QUESTIONS.keys()), scores=ordered)
 
 
@@ -212,16 +96,154 @@ def world_view():
     conn.close()
     total = len(rows)
     if total == 0:
-        avg_scores = [2] * len(QUESTIONS)
+        avg = [2] * len(QUESTIONS)
     else:
         sums = [0] * len(QUESTIONS)
         for r in rows:
             data = json.loads(r['scores'])
             for i, key in enumerate(QUESTIONS):
                 sums[i] += data.get(key, 2)
-        avg_scores = [round(s / total, 2) for s in sums]
+        avg = [round(s / total, 2) for s in sums]
     return render_template('world_view.html', total=total,
-                           labels=list(QUESTIONS.keys()), avg_scores=avg_scores)
+                           labels=list(QUESTIONS.keys()), avg_scores=avg)
+
+
+# ---------------- linear clinical screen ----------------
+@app.route('/screen', methods=['GET', 'POST'])
+def screen_start():
+    if request.method == 'POST':
+        session['screen_identity'] = {
+            'age': request.form.get('age', ''),
+            'gender': request.form.get('gender', ''),
+        }
+        session['screen_data'] = {}
+        return redirect(url_for('screen_section', idx=0))
+    return render_template('screen_start.html', total=len(SCREEN_SECTIONS))
+
+
+@app.route('/screen/<int:idx>', methods=['GET'])
+def screen_section(idx):
+    if 'screen_data' not in session:
+        return redirect(url_for('screen_start'))
+    if idx >= len(SCREEN_SECTIONS):
+        return redirect(url_for('screen_finish'))
+    return render_template('screen_section.html',
+                           section=SCREEN_SECTIONS[idx], idx=idx,
+                           total=len(SCREEN_SECTIONS))
+
+
+@app.route('/screen/<int:idx>/next', methods=['POST'])
+def screen_next(idx):
+    if 'screen_data' not in session:
+        return redirect(url_for('screen_start'))
+    section = SCREEN_SECTIONS[idx]
+    session['screen_data'][str(idx)] = score_instrument(section, request.form)
+    session.modified = True
+    if idx + 1 >= len(SCREEN_SECTIONS):
+        return redirect(url_for('screen_finish'))
+    return redirect(url_for('screen_section', idx=idx + 1))
+
+
+@app.route('/screen/finish')
+def screen_finish():
+    data = session.get('screen_data')
+    ident = session.get('screen_identity', {})
+    if data is None:
+        return redirect(url_for('screen_start'))
+    results = [data.get(str(i)) for i in range(len(SCREEN_SECTIONS))]
+    flags = [(SCREEN_SECTIONS[i]['title'], SCREEN_SECTIONS[i]['instrument'])
+             for i, r in enumerate(results) if r and r.get('flag')]
+    conn = get_db()
+    age = ident.get('age', '')
+    conn.execute("INSERT INTO screens(age, gender, results, flags) VALUES(?,?,?,?)",
+                 (int(age) if str(age).isdigit() else None,
+                  ident.get('gender', ''), json.dumps(results),
+                  json.dumps(flags)))
+    conn.commit()
+    conn.close()
+    session.pop('screen_data', None)
+    session.pop('screen_identity', None)
+    return render_template('screen_result.html', sections=SCREEN_SECTIONS,
+                           results=results, flags=flags,
+                           pairs=list(zip(SCREEN_SECTIONS, results)))
+
+
+# ---------------- IQ (CHC) ----------------
+@app.route('/iq')
+def iq_intro():
+    return render_template('iq_intro.html', domains=iq_eq.IQ_DOMAINS,
+                           minutes=12)
+
+
+@app.route('/iq/test')
+def iq_test():
+    return render_template('iq_test.html', items=iq_eq.iq_domain_items(),
+                           digit=iq_eq.DIGIT_SPAN,
+                           symbols=iq_eq.SYMBOL_SEARCH_SECONDS)
+
+
+@app.route('/iq/result', methods=['POST'])
+def iq_result():
+    data = request.get_json(force=True)
+    correct = data.get('correct', {})
+    digits = int(data.get('digits', 0))          # longest span reached
+    symbols = int(data.get('symbols', 0))        # items found in 60s
+
+    domain_scores = {"Gf": [0, 0], "Gc": [0, 0], "Gv": [0, 0], "Gq": [0, 0]}
+    for key, ok in correct.items():
+        dom = key.split(':')[0]
+        if dom in domain_scores:
+            domain_scores[dom][1] += 1
+            if ok:
+                domain_scores[dom][0] += 1
+
+    fracs = {}
+    for dom, (got, tot) in domain_scores.items():
+        fracs[dom] = (got / tot) if tot else 0
+    fracs["Gwm"] = min(1.0, digits / 9.0)
+    fracs["Gs"] = min(1.0, symbols / 30.0)
+
+    weights = {"Gf": 0.3, "Gc": 0.2, "Gwm": 0.2, "Gv": 0.15, "Gq": 0.1, "Gs": 0.05}
+    overall_frac = sum(fracs[d] * w for d, w in weights.items())
+    iq = iq_eq.standard_score(overall_frac)
+
+    domains_out = {d: {"standard": iq_eq.standard_score(f), "band": iq_eq.iq_band(iq_eq.standard_score(f))}
+                   for d, f in fracs.items()}
+    age = data.get('age')
+    conn = get_db()
+    conn.execute("INSERT INTO iq_results(age, standard_score, domains) VALUES(?,?,?)",
+                 (int(age) if str(age or '').isdigit() else None, iq,
+                  json.dumps(domains_out)))
+    conn.commit()
+    conn.close()
+    return render_template('iq_result.html', iq=iq, band=iq_eq.iq_band(iq),
+                           domains=domains_out)
+
+
+# ---------------- EQ ----------------
+@app.route('/eq')
+def eq_intro():
+    return render_template('eq_intro.html')
+
+
+@app.route('/eq/test')
+def eq_test():
+    return render_template('eq_test.html', items=iq_eq.EQ_ITEMS,
+                           scale=iq_eq.EQ_SCALE)
+
+
+@app.route('/eq/result', methods=['POST'])
+def eq_result():
+    total, subs, subsmax = iq_eq.score_eq(request.form)
+    total_max = sum(subsmax.values())
+    age = request.form.get('age', '')
+    conn = get_db()
+    conn.execute("INSERT INTO eq_results(age, total, subscales) VALUES(?,?,?)",
+                 (int(age) if age.isdigit() else None, total, json.dumps(subs)))
+    conn.commit()
+    conn.close()
+    return render_template('eq_result.html', total=total, total_max=total_max,
+                           band=iq_eq.eq_band(total), subs=subs, subsmax=subsmax)
 
 
 if __name__ == '__main__':

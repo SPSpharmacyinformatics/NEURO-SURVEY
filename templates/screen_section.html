@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}{{ section.title }} — Screen{% endblock %}
+{% block body %}
+<div class="progress"><div style="width:{{ (idx / total * 100)|round(0) }}%"></div></div>
+<p class="muted">Section {{ idx + 1 }} of {{ total }}</p>
+<h2>{{ section.title }}</h2>
+<p class="muted">Instrument: <b>{{ section.instrument }}</b></p>
+
+<form method="post" action="{{ url_for('screen_next', idx=idx) }}">
+
+{% if section.id in ('phq9', 'gad7') %}
+    <p class="muted">Over the last 2 weeks, how often have you been bothered by:</p>
+    {% for item in section["items"] %}
+    <div class="q-item"><p>{{ item }}</p>
+        {% for s in section.scale %}
+        <label class="opt"><input type="radio" name="{{ section.id }}_{{ loop.index0 }}"
+               value="{{ loop.index0 }}" {% if loop.index0 == 0 %}required{% endif %}> {{ s }}</label>
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+{% elif section.id == 'asrs' %}
+    <p class="muted">Over the last 6 months, how often have you:</p>
+    {% for item in section["items"] %}
+    <div class="q-item"><p>{{ item.t }}</p>
+        {% for s in section.scale %}
+        <label class="opt"><input type="radio" name="asrs_{{ loop.index0 }}"
+               value="{{ loop.index0 }}" {% if loop.index0 == 0 %}required{% endif %}> {{ s }}</label>
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+{% elif section.id == 'aq10' %}
+    <p class="muted">Choose how much each statement applies to you.</p>
+    {% for item in section["items"] %}
+    <div class="q-item"><p>{{ item }}</p>
+        {% for s in section.scale %}
+        <label class="opt"><input type="radio" name="aq10_{{ loop.index0 }}"
+               value="{{ loop.index0 }}" {% if loop.index0 == 0 %}required{% endif %}> {{ s }}</label>
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+{% elif section.id in ('mdq', 'pcptsd5') %}
+    {% if section.id == 'pcptsd5' %}
+        <p class="muted">One set of questions — answer Yes/No for each part.</p>
+    {% else %}
+        <p class="muted">Has there ever been a period of at least several days when you experienced the following? (Yes/No)</p>
+    {% endif %}
+    {% for item in section["items"] %}
+    <div class="q-item"><p>{{ loop.index }}. {{ item }}</p>
+        {% for s in section.scale %}
+        <label class="opt"><input type="radio" name="{{ section.id }}_{{ loop.index0 }}"
+               value="{{ s }}" {% if loop.index0 == 0 %}required{% endif %}> {{ s }}</label>
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+{% elif section.id == 'big5' %}
+    <p class="muted">Rate how well each statement describes you generally.</p>
+    {% set ns = namespace(i=0) %}
+    {% for dom, items in section.domains.items() %}
+        <h3 style="color:var(--gold)">{{ dom }}</h3>
+        {% for t, key in items %}
+        <div class="q-item"><p>{{ t }}</p>
+            {% for s in section.scale %}
+            <label class="opt"><input type="radio" name="big5_{{ ns.i }}"
+                   value="{{ loop.index0 }}" {% if loop.index0 == 2 %}checked{% endif %}> {{ s }}</label>
+            {% endfor %}
+        </div>
+        {% set ns.i = ns.i + 1 %}
+        {% endfor %}
+    {% endfor %}
+
+{% elif section.id == 'pid5' %}
+    <p class="muted">Rate how true each statement is of you in general.</p>
+    {% set ns = namespace(i=0) %}
+    {% for dom, items in section.domains.items() %}
+        <h3 style="color:var(--gold)">{{ dom }}</h3>
+        {% for t in items %}
+        <div class="q-item"><p>{{ t }}</p>
+            {% for s in section.scale %}
+            <label class="opt"><input type="radio" name="pid5_{{ ns.i }}"
+                   value="{{ loop.index0 }}" {% if loop.index0 == 1 %}checked{% endif %}> {{ s }}</label>
+            {% endfor %}
+        </div>
+        {% set ns.i = ns.i + 1 %}
+        {% endfor %}
+    {% endfor %}
+{% endif %}
+
+<div style="text-align:center; margin-top:20px">
+    <button class="btn">{% if idx + 1 < total %}Continue →{% else %}See My Results{% endif %}</button>
+</div>
+</form>
+{% endblock %}
