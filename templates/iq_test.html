@@ -65,10 +65,10 @@ function buildItems() {
             items.push({ html: `<p>Which option completes the matrix?</p>
                 <div class="mgrid">${cells}</div><div class="optgrid">${opts}</div>`, key: `Gf:${k}` });
         } else if (kind === 'rotation') {
-            const s = payload.spec;
-            let opts = s.options.map((deg, i) =>
-                `<div class="opt" data-key="Gv:${k}" data-ok="${i === s.answer}">${rotSVG(deg)}</div>`).join('');
-            items.push({ html: `<p>${payload.q}</p><p>Reference:</p>${polySVG(s.ref, 90)}
+            const s = payload;
+            let opts = s.options.map((pts, i) =>
+                `<div class="opt" data-key="Gv:${k}" data-ok="${i === s.answer}">${polySVG(pts, 80)}</div>`).join('');
+            items.push({ html: `<p>${s.q}</p><p>Reference:</p>${polySVG(s.ref, 80)}
                 <div class="optgrid">${opts}</div>`, key: `Gv:${k}` });
         } else if (kind === 'xor') {
             const s = payload.spec;

@@ -30,10 +30,6 @@ MATRIX_ITEMS = [
             {"shape": "triangle", "count": 3}, {"shape": "circle", "count": 1},
             {"shape": "square", "count": 2}, {"shape": "triangle", "count": 1}],
         "answer": 0}},
-    # rule: rotation 0/90/180 across columns
-    {"svg": "rotation", "spec": {
-        "base": "L", "rotations": [0, 90, 180, 0, 90, 180, 0, 90],
-        "options": [180, 270, 0, 90], "answer": 0}},
     # rule: XOR of elements across the row
     {"svg": "xor", "spec": {
         "rows": [
@@ -91,7 +87,7 @@ def iq_domain_items():
     """Ordered item list: (kind, payload, domain)."""
     items = []
     for m in MATRIX_ITEMS:
-        items.append(("matrix", m, "Gf"))
+        items.append((m["svg"], m, "Gf"))
     for s in SERIES_ITEMS:
         items.append(("series", s, s["domain"]))
     for v in VERBAL_ITEMS:
