@@ -113,9 +113,20 @@ function render() {
     } else if (idx === items.length) {
         digitSpan.phase = 'show'; digitSpan.seq = []; digitSpan.input = '';
         nextDigitStage();
-    } else {
+    } else if (idx === items.length + 1) {
         startSymbols();
+    } else {
+        finish();
     }
+}
+
+function finish() {
+    const st = document.getElementById('stage');
+    st.classList.add('hidden');
+    document.getElementById('done').classList.remove('hidden');
+    document.getElementById('prog').style.width = '100%';
+    window.scrollTo(0, 0);
+    party(50);
 }
 
 function nextDigitStage() {
@@ -149,6 +160,7 @@ function askDigits() {
 
 function startSymbols() {
     const st = document.getElementById('stage');
+    symbol.left = SYMBOL_SECONDS;
     const glyphs = '▲●■◆★✦⬟⬢';
     st.innerHTML = `<p>Click every <b style="color:#f1c40f">▲</b> you see. Go fast!</p>
         <h3 id="stimer">${symbol.left}s — found: <span id="scount">0</span></h3>
