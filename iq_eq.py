@@ -52,12 +52,12 @@ SERIES_ITEMS = [
 
 # ---- Gc: Verbal analogies & vocabulary ------------------------------------
 VERBAL_ITEMS = [
-    {"q": "Ephemeral is to permanent as transparent is to ___", "options": ["clear", "opaque", "visible", "glass"], "answer": 1},
-    {"q": "Sculptor is to marble as poet is to ___", "options": ["rhyme", "language", "verse", "ink"], "answer": 1},
-    {"q": "Which word means most nearly the opposite of 'magnanimous'?", "options": ["generous", "petty", "noble", "forgiving"], "answer": 1},
-    {"q": "Arboreal is to tree as aquatic is to ___", "options": ["fish", "water", "swim", "boat"], "answer": 1},
-    {"q": "Ubiquitous most nearly means ___", "options": ["rare", "unique", "everywhere", "unclear"], "answer": 2},
-    {"q": "Cacophony is to sound as labyrinth is to ___", "options": ["maze", "music", "silence", "wall"], "answer": 0},
+    {"q": "Ephemeral is to permanent as transparent is to ___", "options": ["clear", "opaque", "visible", "glass"], "answer": 1, "domain": "Gc"},
+    {"q": "Sculptor is to marble as poet is to ___", "options": ["rhyme", "language", "verse", "ink"], "answer": 1, "domain": "Gc"},
+    {"q": "Which word means most nearly the opposite of 'magnanimous'?", "options": ["generous", "petty", "noble", "forgiving"], "answer": 1, "domain": "Gc"},
+    {"q": "Arboreal is to tree as aquatic is to ___", "options": ["fish", "water", "swim", "boat"], "answer": 1, "domain": "Gc"},
+    {"q": "Ubiquitous most nearly means ___", "options": ["rare", "unique", "everywhere", "unclear"], "answer": 2, "domain": "Gc"},
+    {"q": "Cacophony is to sound as labyrinth is to ___", "options": ["maze", "music", "silence", "wall"], "answer": 0, "domain": "Gc"},
 ]
 
 # ---- Gv: Mental rotation (described shapes rendered as SVG polygons) ------
@@ -73,7 +73,7 @@ ROTATION_ITEMS = [
                  [[0, 0], [3, 0], [3, 1], [1, 1], [1, 2], [0, 2]],
                  [[0, 0], [2, 0], [2, 3], [1, 3], [1, 1], [0, 1]],
                  [[0, 0], [3, 0], [3, 2], [2, 2], [2, 3], [0, 3]]],
-     "answer": 0},
+     "answer": 0, "domain": "Gc"},
 ]
 
 # ---- Gwm: Digit span (interactive; JS generates sequences) ----------------
