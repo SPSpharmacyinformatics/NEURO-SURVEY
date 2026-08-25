@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_blip.html" import blip %}
+{% block title %}Login{% endblock %}
+{% block body %}
+<div class="center">
+    <h1>🎟️ Grab your badge</h1>
+    <p class="muted" style="color:#eaf2ff">A username keeps all your results together on your personal dashboard.</p>
+</div>
+{{ blip("happy", "No email, no password, no spam. Just a name for your shelf 📚") }}
+<div class="card">
+    {% if error %}<p style="color:var(--bad); font-weight:700">{{ error }}</p>{% endif %}
+    <form method="post" action="{{ url_for('login') }}">
+        <input type="hidden" name="next" value="{{ next }}">
+        <label class="muted">Username (3-20 letters, digits, underscores)</label>
+        <input type="text" name="username" required minlength="3" maxlength="20"
+               pattern="[A-Za-z0-9_]+" placeholder="e.g. curious_otter" autofocus>
+        <div style="margin-top:12px"><button class="btn">That's me ✋</button></div>
+    </form>
+    <p class="muted" style="margin-top:12px">Existing name? Same shelf, full history.
+    New name? Fresh shelf. Usernames are public-facing — don't use your real name if
+    you'd rather stay anonymous.</p>
+</div>
+{% endblock %}

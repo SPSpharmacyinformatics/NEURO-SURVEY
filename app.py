@@ -3,8 +3,9 @@ import os
 import sqlite3
 
 from flask import (Flask, render_template, request, redirect, url_for,
-                   session)
+                   session, flash)
 
+from correlations import combined_insights
 from instruments import (SCREEN_SECTIONS, score_instrument, QUESTIONS,
                          classify_profile)
 import iq_eq
@@ -24,43 +25,179 @@ def get_db():
 def init_db():
     conn = get_db()
     conn.executescript("""
+        CREATE TABLE IF NOT EXISTS users(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
         CREATE TABLE IF NOT EXISTS responses(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
             age INTEGER, gender TEXT, scores TEXT NOT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
         CREATE TABLE IF NOT EXISTS screens(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
             age INTEGER, gender TEXT, results TEXT NOT NULL,
             flags TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
         CREATE TABLE IF NOT EXISTS iq_results(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
             age INTEGER, standard_score INTEGER, domains TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
         CREATE TABLE IF NOT EXISTS eq_results(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
             age INTEGER, total INTEGER, subscales TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
     """)
+    for table in ("responses", "screens", "iq_results", "eq_results"):
+        try:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN user_id INTEGER")
+        except sqlite3.OperationalError:
+            pass
     conn.commit()
     conn.close()
+
+
+def current_user():
+    uid = session.get("uid")
+    name = session.get("username")
+    if not uid or not name:
+        return None
+    return {"id": uid, "username": name}
+
+
+def require_login():
+    if not current_user():
+        return redirect(url_for("login", next=request.path))
+    return None
+
+
+# ---------------- auth ----------------
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    nxt = request.args.get('next') or request.form.get('next') or url_for('index')
+    if not nxt.startswith('/'):
+        nxt = url_for('index')
+    if request.method == 'POST':
+        username = (request.form.get('username') or "").strip()
+        if not (3 <= len(username) <= 20) or not all(c.isalnum() or c == '_' for c in username):
+            return render_template('login.html', error="Username must be 3-20 letters, digits or underscores.",
+                                   next=nxt)
+        conn = get_db()
+        row = conn.execute("SELECT id FROM users WHERE username=?", (username,)).fetchone()
+        if row:
+            uid = row["id"]
+            flash_msg = f"Welcome back, {username}!"
+        else:
+            cur = conn.execute("INSERT INTO users(username) VALUES(?)", (username,))
+            uid = cur.lastrowid
+            flash_msg = f"Welcome aboard, {username}! Fresh journey started."
+        conn.commit()
+        conn.close()
+        session["uid"] = uid
+        session["username"] = username
+        session["just_logged_in"] = flash_msg
+        return redirect(nxt)
+    return render_template('login.html', next=nxt)
+
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('index'))
 
 
 # ---------------- home ----------------
 @app.route('/')
 def index():
-    return render_template('assess.html')
+    return render_template('assess.html', user=current_user(),
+                           banner=session.pop("just_logged_in", None))
+
+
+# ---------------- dashboard ----------------
+@app.route('/dashboard')
+def dashboard():
+    gate = require_login()
+    if gate:
+        return gate
+    user = current_user()
+    conn = get_db()
+    uid = user["id"]
+
+    iq_rows = conn.execute("SELECT * FROM iq_results WHERE user_id=? ORDER BY id DESC LIMIT 10",
+                           (uid,)).fetchall()
+    eq_rows = conn.execute("SELECT * FROM eq_results WHERE user_id=? ORDER BY id DESC LIMIT 10",
+                           (uid,)).fetchall()
+    scr_rows = conn.execute("SELECT * FROM screens WHERE user_id=? ORDER BY id DESC LIMIT 10",
+                            (uid,)).fetchall()
+    map_rows = conn.execute("SELECT * FROM responses WHERE user_id=? ORDER BY id DESC LIMIT 10",
+                            (uid,)).fetchall()
+    conn.close()
+
+    iq_latest = None
+    if iq_rows:
+        d = dict(iq_rows[0])
+        d["domains"] = json.loads(d["domains"])
+        iq_latest = d
+    eq_latest = None
+    if eq_rows:
+        d = dict(eq_rows[0])
+        d["subscales"] = json.loads(d["subscales"])
+        eq_latest = d
+    scr_latest = None
+    scr_flags = []
+    scr_domains = []
+    if scr_rows:
+        d = dict(scr_rows[0])
+        results = json.loads(d["results"])
+        flags = json.loads(d["flags"])
+        for f in flags:
+            name = f[0] if isinstance(f, (list, tuple)) else f
+            scr_flags.append(str(name).replace("&amp;", "&"))
+        for section, r in zip(SCREEN_SECTIONS, results):
+            if r:
+                scr_domains.append((section["title"], r.get("band", ""),
+                                    r.get("score", 0), r.get("max", 0)))
+        scr_latest = d
+    map_latest = None
+    map_scores = {}
+    if map_rows:
+        d = dict(map_rows[0])
+        map_scores = json.loads(d["scores"])
+        map_latest = d
+
+    insights = combined_insights(
+        iq=iq_latest,
+        eq={"total": eq_latest["total"], "max": 70, "subscales": eq_latest["subscales"]} if eq_latest else None,
+        screen={"flags": scr_flags, "domains": scr_domains} if scr_rows else None,
+        maps={"scores": map_scores} if map_rows else None,
+    )
+
+    return render_template('dashboard.html', user=user,
+                           iq=iq_latest, iq_hist=iq_rows,
+                           eq=eq_latest, eq_hist=eq_rows,
+                           screen=scr_latest, screen_flags=scr_flags,
+                           screen_domains=scr_domains, screen_hist=scr_rows,
+                           map_latest=map_latest, map_hist=map_rows,
+                           map_scores=map_scores,
+                           insights=insights)
 
 
 # ---------------- original quick map ----------------
 @app.route('/quick-map')
 def quick_map():
-    return render_template('index.html')
+    gate = require_login()
+    return gate or render_template('index.html')
 
 
 @app.route('/survey', methods=['POST'])
 def survey():
+    gate = require_login()
+    if gate:
+        return gate
     return render_template('survey.html',
-                           name=request.form.get('name', ''),
+                           name=current_user()["username"],
                            age=request.form.get('age', ''),
                            gender=request.form.get('gender', ''),
                            questions=QUESTIONS)
@@ -68,7 +205,9 @@ def survey():
 
 @app.route('/submit', methods=['POST'])
 def submit():
-    name = request.form.get('name', 'Anonymous')
+    gate = require_login()
+    if gate:
+        return gate
     age = request.form.get('age', '')
     scores = {}
     for key in QUESTIONS:
@@ -79,12 +218,13 @@ def submit():
     ordered = [scores[k] for k in QUESTIONS]
     title, desc = classify_profile(ordered)
     conn = get_db()
-    conn.execute("INSERT INTO responses(age, gender, scores) VALUES(?,?,?)",
-                 (int(age) if str(age).isdigit() else None,
+    conn.execute("INSERT INTO responses(user_id, age, gender, scores) VALUES(?,?,?,?)",
+                 (current_user()["id"],
+                  int(age) if str(age).isdigit() else None,
                   request.form.get('gender', ''), json.dumps(scores)))
     conn.commit()
     conn.close()
-    return render_template('results.html', name=name, age=age,
+    return render_template('results.html', name=current_user()["username"], age=age,
                            profile_title=title, profile_desc=desc,
                            labels=list(QUESTIONS.keys()), scores=ordered)
 
@@ -111,6 +251,9 @@ def world_view():
 # ---------------- linear clinical screen ----------------
 @app.route('/screen', methods=['GET', 'POST'])
 def screen_start():
+    gate = require_login()
+    if gate:
+        return gate
     if request.method == 'POST':
         session['screen_identity'] = {
             'age': request.form.get('age', ''),
@@ -123,6 +266,9 @@ def screen_start():
 
 @app.route('/screen/<int:idx>', methods=['GET'])
 def screen_section(idx):
+    gate = require_login()
+    if gate:
+        return gate
     if 'screen_data' not in session:
         return redirect(url_for('screen_start'))
     if idx >= len(SCREEN_SECTIONS):
@@ -134,8 +280,9 @@ def screen_section(idx):
 
 @app.route('/screen/<int:idx>/next', methods=['POST'])
 def screen_next(idx):
-    if 'screen_data' not in session:
-        return redirect(url_for('screen_start'))
+    gate = require_login()
+    if gate:
+        return gate
     section = SCREEN_SECTIONS[idx]
     session['screen_data'][str(idx)] = score_instrument(section, request.form)
     session.modified = True
@@ -146,6 +293,9 @@ def screen_next(idx):
 
 @app.route('/screen/finish')
 def screen_finish():
+    gate = require_login()
+    if gate:
+        return gate
     data = session.get('screen_data')
     ident = session.get('screen_identity', {})
     if data is None:
@@ -155,8 +305,9 @@ def screen_finish():
              for i, r in enumerate(results) if r and r.get('flag')]
     conn = get_db()
     age = ident.get('age', '')
-    conn.execute("INSERT INTO screens(age, gender, results, flags) VALUES(?,?,?,?)",
-                 (int(age) if str(age).isdigit() else None,
+    conn.execute("INSERT INTO screens(user_id, age, gender, results, flags) VALUES(?,?,?,?,?)",
+                 (current_user()["id"],
+                  int(age) if str(age).isdigit() else None,
                   ident.get('gender', ''), json.dumps(results),
                   json.dumps(flags)))
     conn.commit()
@@ -171,23 +322,28 @@ def screen_finish():
 # ---------------- IQ (CHC) ----------------
 @app.route('/iq')
 def iq_intro():
-    return render_template('iq_intro.html', domains=iq_eq.IQ_DOMAINS,
-                           minutes=12)
+    gate = require_login()
+    return gate or render_template('iq_intro.html', domains=iq_eq.IQ_DOMAINS,
+                                   minutes=12)
 
 
 @app.route('/iq/test')
 def iq_test():
-    return render_template('iq_test.html', items=iq_eq.iq_domain_items(),
-                           digit=iq_eq.DIGIT_SPAN,
-                           symbols=iq_eq.SYMBOL_SEARCH_SECONDS)
+    gate = require_login()
+    return gate or render_template('iq_test.html', items=iq_eq.iq_domain_items(),
+                                   digit=iq_eq.DIGIT_SPAN,
+                                   symbols=iq_eq.SYMBOL_SEARCH_SECONDS)
 
 
 @app.route('/iq/result', methods=['POST'])
 def iq_result():
+    gate = require_login()
+    if gate:
+        return gate
     data = request.get_json(force=True)
     correct = data.get('correct', {})
-    digits = int(data.get('digits', 0))          # longest span reached
-    symbols = int(data.get('symbols', 0))        # items found in 60s
+    digits = int(data.get('digits') or 0)
+    symbols = int(data.get('symbols') or 0)
 
     domain_scores = {"Gf": [0, 0], "Gc": [0, 0], "Gv": [0, 0], "Gq": [0, 0]}
     for key, ok in correct.items():
@@ -211,8 +367,9 @@ def iq_result():
                    for d, f in fracs.items()}
     age = data.get('age')
     conn = get_db()
-    conn.execute("INSERT INTO iq_results(age, standard_score, domains) VALUES(?,?,?)",
-                 (int(age) if str(age or '').isdigit() else None, iq,
+    conn.execute("INSERT INTO iq_results(user_id, age, standard_score, domains) VALUES(?,?,?,?)",
+                 (current_user()["id"],
+                  int(age) if str(age or '').isdigit() else None, iq,
                   json.dumps(domains_out)))
     conn.commit()
     conn.close()
@@ -223,23 +380,29 @@ def iq_result():
 # ---------------- EQ ----------------
 @app.route('/eq')
 def eq_intro():
-    return render_template('eq_intro.html')
+    gate = require_login()
+    return gate or render_template('eq_intro.html')
 
 
 @app.route('/eq/test')
 def eq_test():
-    return render_template('eq_test.html', items=iq_eq.EQ_ITEMS,
-                           scale=iq_eq.EQ_SCALE)
+    gate = require_login()
+    return gate or render_template('eq_test.html', items=iq_eq.EQ_ITEMS,
+                                   scale=iq_eq.EQ_SCALE)
 
 
 @app.route('/eq/result', methods=['POST'])
 def eq_result():
+    gate = require_login()
+    if gate:
+        return gate
     total, subs, subsmax = iq_eq.score_eq(request.form)
     total_max = sum(subsmax.values())
     age = request.form.get('age', '')
     conn = get_db()
-    conn.execute("INSERT INTO eq_results(age, total, subscales) VALUES(?,?,?)",
-                 (int(age) if age.isdigit() else None, total, json.dumps(subs)))
+    conn.execute("INSERT INTO eq_results(user_id, age, total, subscales) VALUES(?,?,?,?)",
+                 (current_user()["id"],
+                  int(age) if age.isdigit() else None, total, json.dumps(subs)))
     conn.commit()
     conn.close()
     return render_template('eq_result.html', total=total, total_max=total_max,

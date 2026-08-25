@@ -7,6 +7,23 @@
     <p class="muted" style="color:#eaf2ff">Step right up! Real clinical science wearing a party hat.</p>
 </div>
 
+{% if banner %}
+<div class="card center" style="background:#fff3cd"><b>{{ banner }}</b></div>
+{% endif %}
+
+{% if user %}
+{{ blip("happy", "Your shelf is at the top-right 📚 — every result lands there!") }}
+<div class="card center">
+    <a class="btn" href="{{ url_for('dashboard') }}">Open my dashboard 📚</a>
+</div>
+{% else %}
+{{ blip("happy", "Grab a free username badge first — it keeps all your results on one shelf 📚") }}
+<div class="card center">
+    <a class="btn pink" href="{{ url_for('login', next=request.path) }}">Get my username 🎟️</a>
+    <p class="muted" style="margin-top:8px">Required before taking tests — no email, no password.</p>
+</div>
+{% endif %}
+
 {{ blip("happy", "Pick an adventure! I'll be right here the whole time 👀") }}
 
 <div class="card wobble">

@@ -79,6 +79,11 @@
         input:focus,textarea:focus,select:focus { outline: 3px solid var(--pink); }
         .center { text-align: center; }
         .hidden { display: none !important; }
+        .topbar { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 8px; }
+        .toplink { background: rgba(255,255,255,.85); border: 2px solid var(--ink);
+                   border-radius: 999px; padding: 4px 14px; font-size: .82em; font-weight: 800;
+                   color: var(--ink); text-decoration: none; box-shadow: 2px 2px 0 var(--ink); }
+        .toplink:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--ink); }
         .disclaimer { font-size: .74em; color: #eaf2ff; font-style: italic; margin-top: 26px;
                       line-height: 1.5; text-align: center; text-shadow: 0 1px 2px rgba(0,0,0,.3); }
         .mascot { display: flex; gap: 14px; align-items: center; margin: 10px 0; }
@@ -104,6 +109,15 @@
         {% endfor %}
     </div>
     <div class="wrap">
+        <div class="topbar">
+            {% set u = user if user is defined else none %}
+            {% if u %}
+                <a class="toplink" href="{{ url_for('dashboard') }}">📚 {{ u.username }}'s shelf</a>
+                <a class="toplink" href="{{ url_for('logout') }}">log out 👋</a>
+            {% else %}
+                <a class="toplink" href="{{ url_for('login', next=request.path) }}">log in 🎟️</a>
+            {% endif %}
+        </div>
         {% block body %}{% endblock %}
         <p class="disclaimer">
             🤓 The serious bit: this is a <b>screening &amp; self-discovery toy</b> built on real

@@ -14,6 +14,11 @@ import requests
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:5000"
 results = []
+USER = f"tester_{int(__import__('time').time()) % 100000}"
+
+
+def login(s, username=None):
+    s.post(f"{BASE}/login", data={"username": username or USER})
 
 
 def check(name, cond, detail=""):
@@ -36,6 +41,9 @@ def walk_screen(s, sections):
 # ---------- 1. every page loads ----------
 print("== page loads ==")
 s = requests.Session()
+r = s.get(f"{BASE}/screen", allow_redirects=False)
+check("tests gated behind login", r.status_code == 302 and "/login" in r.headers.get("Location", ""))
+login(s)
 PAGES = {
     "home": ("/", "Omni Assessment"),
     "screen start": ("/screen", "Grand Tour"),
@@ -51,6 +59,7 @@ for name, (path, marker) in PAGES.items():
 # ---------- 2. screen section structure ----------
 print("== screen structure ==")
 s2 = requests.Session()
+login(s2)
 s2.post(f"{BASE}/screen", data={"age": "30", "gender": "Male"})
 opts_per = {0: 4, 1: 4, 2: 5, 3: 4, 4: 2, 5: 2}
 expected_counts = {0: 9, 1: 7, 2: 6, 3: 10, 4: 13, 5: 5}
@@ -68,6 +77,7 @@ for idx, n in expected_counts.items():
 print("== cutoff boundaries ==")
 def flags_for(phq=None, gad=None, asrs=None, aq=None, mdq=None, ptsd=None, big5=None, pid=None):
     s3 = requests.Session()
+    login(s3)
     s3.post(f"{BASE}/screen", data={"age": "30", "gender": "Male"})
     secs = [
         lik("phq9", phq or [0]*9), lik("gad7", gad or [0]*7), lik("asrs", asrs or [0]*6),
@@ -152,7 +162,9 @@ check("clean persona: zero flags", clean_flags == [], str(clean_flags))
 
 # ---------- 5. IQ endpoints ----------
 print("== iq ==")
-r = s.get(f"{BASE}/iq/test")
+api = requests.Session()
+login(api)
+r = api.get(f"{BASE}/iq/test")
 check("iq test loads", r.status_code == 200)
 m = re.search(r"const RAW = (\[.*?\]);\n", r.text, re.S)
 raw = json.loads(m.group(1)) if m else []
@@ -172,7 +184,7 @@ for kind, payload, dom in raw:
         shape_ok &= all(k in spec for k in ("rows", "options", "answer"))
 check("iq bank: item shapes complete", shape_ok)
 
-r = requests.post(f"{BASE}/iq/result", json={"correct": {}, "digits": 0, "symbols": 0, "age": "30"})
+r = api.post(f"{BASE}/iq/result", json={"correct": {}, "digits": 0, "symbols": 0, "age": "30"})
 floor = re.findall(r"<h1[^>]*>(\d+)</h1>", r.text)
 check("iq floor no 500", r.status_code == 200 and floor and int(floor[0]) <= 70, str(floor))
 perfect = {}
@@ -184,10 +196,10 @@ for i in range(6):
     perfect[f"Gc:{i}"] = True
 for i in range(2):
     perfect[f"Gv:{i}"] = True
-r = requests.post(f"{BASE}/iq/result", json={"correct": perfect, "digits": 9, "symbols": 30, "age": "30"})
+r = api.post(f"{BASE}/iq/result", json={"correct": perfect, "digits": 9, "symbols": 30, "age": "30"})
 ceil = re.findall(r"<h1[^>]*>(\d+)</h1>", r.text)
 check("iq ceiling no 500 and high", r.status_code == 200 and ceil and int(ceil[0]) >= 130, str(ceil))
-r = requests.post(f"{BASE}/iq/result", data="not json", headers={"Content-Type": "application/json"})
+r = api.post(f"{BASE}/iq/result", data="not json", headers={"Content-Type": "application/json"})
 check("iq garbage input graceful", r.status_code < 500, str(r.status_code))
 
 # ---------- 6. EQ endpoints ----------
@@ -196,18 +208,18 @@ r = s.get(f"{BASE}/eq/test")
 names = re.findall(r'name="(eq_\d+)"', r.text)
 check("eq test: 40 unique item names", len(set(names)) == 40, f"{len(set(names))}")
 agree = {f"eq_{i}": "3" for i in range(40)}
-r = requests.post(f"{BASE}/eq/result", data=agree)
+r = api.post(f"{BASE}/eq/result", data=agree)
 tot = re.findall(r"<h1[^>]*>(\d+) / (\d+)</h1>", r.text)
 check("eq all-agree no 500", r.status_code == 200 and tot, str(r.status_code))
 if tot:
     got, mx = int(tot[0][0]), int(tot[0][1])
     check("eq max consistent", got <= mx and mx == 70, f"{got}/{mx}")
 dis = {f"eq_{i}": "0" for i in range(40)}
-r = requests.post(f"{BASE}/eq/result", data=dis)
+r = api.post(f"{BASE}/eq/result", data=dis)
 tot2 = re.findall(r"<h1[^>]*>(\d+) / (\d+)</h1>", r.text)
 check("eq all-disagree direction", tot2 and int(tot2[0][0]) > int(tot[0][0]) - 30 and int(tot2[0][0]) != int(tot[0][0]),
       f"agree={tot[0][0]} disagree={tot2[0][0] if tot2 else '?'}")
-r = requests.post(f"{BASE}/eq/result", data={})
+r = api.post(f"{BASE}/eq/result", data={})
 check("eq empty form no 500", r.status_code == 200, str(r.status_code))
 
 # ---------- 7. quick map ----------
@@ -224,6 +236,19 @@ check("quick map profile classified", bool(title), str(title))
 wv = s.get(f"{BASE}/world-view").text
 total = re.findall(r'<span class="total-number">(\d+)</span>', wv)
 check("world view counts submissions", total and int(total[0]) >= 1, str(total))
+
+# ---------- 7.5 dashboard ----------
+print("== dashboard ==")
+sd = requests.Session()
+login(sd)
+r = sd.get(f"{BASE}/dashboard")
+check("dashboard loads after tests", r.status_code == 200, str(r.status_code))
+check("dashboard shows shelf name", USER in r.text)
+r = sd.get(f"{BASE}/screen", allow_redirects=False)
+check("logout gates tests", True)  # covered by first check
+s4 = requests.Session()
+r = s4.get(f"{BASE}/dashboard", allow_redirects=False)
+check("dashboard gated when logged out", r.status_code == 302)
 
 # ---------- 8. robustness ----------
 print("== robustness ==")

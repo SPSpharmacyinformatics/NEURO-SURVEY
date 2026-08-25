@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% from "_blip.html" import blip %}
+{% block title %}Dashboard — {{ user.username }}{% endblock %}
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>{% endblock %}
+{% block body %}
+<div class="center">
+    <h1>📚 {{ user.username }}'s Shelf</h1>
+    <p class="muted" style="color:#eaf2ff">Every test you've taken, combined into one picture.</p>
+</div>
+
+{{ blip("happy", "Shelves tell stories. Yours is below 👇") }}
+
+{% if not (iq or eq or screen or map_latest) %}
+<div class="card center">
+    <h2>Empty shelf!</h2>
+    <p class="muted">Take any assessment and it'll appear here.</p>
+    <a class="btn" href="{{ url_for('index') }}">Pick an adventure 🎪</a>
+</div>
+{% endif %}
+
+{% if insights %}
+<h2>🔮 Combined Insights</h2>
+{% for ins in insights %}
+<div class="card" style="background: {% if ins.tone == 'flag' %}#fff3cd{% else %}var(--paper){% endif %}">
+    <span class="sticker" style="background:{% if ins.tone == 'flag' %}var(--pink); color:white{% else %}var(--teal){% endif %}">{{ ins.title }}</span>
+    <p style="margin:10px 0 0">{{ ins.text }}</p>
+</div>
+{% endfor %}
+{% endif %}
+
+<div class="grid">
+    <div class="card">
+        <h2>📐 IQ</h2>
+        {% if iq %}
+            <h1 style="margin:0">{{ iq.standard_score }}</h1>
+            <p class="muted">latest · {{ iq.created_at[:10] }}</p>
+            <p class="muted">{{ iq_hist|length }} attempt(s)</p>
+        {% else %}<p class="muted">not taken yet</p>
+            <a class="btn secondary small" href="{{ url_for('iq_intro') }}">Take it 🏋️</a>{% endif %}
+    </div>
+    <div class="card">
+        <h2>💘 EQ</h2>
+        {% if eq %}
+            <h1 style="margin:0">{{ eq.total }}<span class="muted" style="font-size:.5em">/70</span></h1>
+            <p class="muted">latest · {{ eq.created_at[:10] }}</p>
+            <p class="muted">{{ eq_hist|length }} attempt(s)</p>
+        {% else %}<p class="muted">not taken yet</p>
+            <a class="btn secondary small" href="{{ url_for('eq_intro') }}">Take it 🔍</a>{% endif %}
+    </div>
+</div>
+
+{% if screen %}
+<div class="card">
+    <h2>🧠 Clinical Screen <span class="muted" style="font-weight:400">· {{ screen.created_at[:10] }} · {{ screen_hist|length }} taken</span></h2>
+    {% if screen_flags %}
+        <p>{% for f in screen_flags %}<span class="badge flag">{{ f }}</span> {% endfor %}</p>
+    {% else %}
+        <p class="muted">No thresholds crossed on the latest run. ✅</p>
+    {% endif %}
+    {% for title, band, score, mx in screen_domains %}
+        <div class="muted">{{ title }}: <b style="color:var(--ink)">{{ band }}</b> ({{ score }}{% if mx %}/{{ mx }}{% endif %})</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if map_latest %}
+<div class="card">
+    <h2>🗺️ Quick Map <span class="muted" style="font-weight:400">· {{ map_latest.created_at[:10] }} · {{ map_hist|length }} taken</span></h2>
+    <canvas id="mapRadar" width="380" height="300"></canvas>
+</div>
+{% endif %}
+
+<div class="center">
+    <a class="btn" href="{{ url_for('index') }}">Take another 🎪</a>
+    <a class="btn secondary" href="{{ url_for('logout') }}">Log out 👋</a>
+</div>
+
+{% if map_latest %}
+<script>
+new Chart(document.getElementById('mapRadar'), {
+    type: 'radar',
+    data: {
+        labels: {{ map_scores.keys()|list|tojson }},
+        datasets: [{
+            label: 'You', data: {{ map_scores.values()|list|tojson }},
+            borderColor: '#ff5da2', backgroundColor: 'rgba(255,93,162,.3)', borderWidth: 3
+        }, {
+            label: 'Baseline', data: Array({{ map_scores|length }}).fill(2),
+            borderColor: 'rgba(26,26,46,.4)', borderDash: [5,5], pointRadius: 0, fill: false
+        }]
+    },
+    options: { scales: { r: { min: 0, max: 8, ticks: { display: false },
+        pointLabels: { color: '#1a1a2e', font: { size: 9, weight: 'bold' } } } },
+        plugins: { legend: { display: false } } }
+});
+</script>
+{% endif %}
+{% endblock %}
