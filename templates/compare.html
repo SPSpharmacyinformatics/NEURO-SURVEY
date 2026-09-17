@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Side-by-side comparison{% endblock %}
+{% block head %}
+<style>
+    .cmp-table { width: 100%; border-collapse: collapse; }
+    .cmp-table th, .cmp-table td { padding: 8px 6px; border-bottom: 1px solid #e3e6ee;
+                                   vertical-align: middle; text-align: left; }
+    .cmp-table thead th { font-size: .85em; color: #5a6270; }
+    .cmp-bar { display: inline-block; width: 120px; max-width: 38vw; height: 14px; background: #e8ebf3;
+               border: 2px solid var(--ink); border-radius: 999px; overflow: hidden; vertical-align: middle; }
+    .cmp-bar > div { height: 100%; }
+    .cmp-person-a { color: #c2185b; font-weight: 800; }
+    .cmp-person-b { color: #00897b; font-weight: 800; }
+</style>
+<script>window.NEURO_METRICS = {{ metrics|tojson }};</script>
+<script src="/static/js/neuro_journey.js"></script>
+{% endblock %}
+{% block body %}
+<div class="center">
+    <h1>👥 Side by side</h1>
+    <p class="muted" style="color:#eaf2ff">Place two profiles next to each other — for a partner,
+    a friend, a parent, or just to compare "then" and "now".</p>
+</div>
+
+<div class="card">
+    <h2>Two codes, one view 🔗</h2>
+    <p class="muted">Each person gets a code on their own results page (under <i>Share &amp; compare</i>).
+    Paste one code — or the whole link — into each box. Everything is decoded right here in your
+    browser; neither code is sent to the server.</p>
+    {% set a = request.args.get('a', '') %}
+    <label class="muted">Person A <span class="cmp-person-a">(pink)</span></label>
+    <input id="cmp-a" type="text" value="{{ a }}" placeholder="paste first code or link"
+           style="width:100%; font-family:monospace; font-size:.85em">
+    <label class="muted" style="margin-top:10px">Person B <span class="cmp-person-b">(teal)</span></label>
+    <input id="cmp-b" type="text" placeholder="paste second code or link (optional to start)"
+           style="width:100%; font-family:monospace; font-size:.85em">
+</div>
+
+<div class="card">
+    <div id="cmp-out"></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>if (window.NeuroJourney) NeuroJourney.initCompare();</script>
+{% endblock %}

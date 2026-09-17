@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 {% from "_blip.html" import blip %}
 {% block title %}Screen Results{% endblock %}
-{% block head %}<script src="/static/js/chart.umd.min.js"></script>{% endblock %}
+{% block head %}<script>window.NEURO_METRICS = {{ metrics|tojson }}; window.NEURO_SNAPSHOT = {{ snapshot|tojson }};</script>
+<script src="/static/js/chart.umd.min.js"></script>
+<script src="/static/js/qrcode.min.js"></script>
+<script src="/static/js/neuro_journey.js"></script>{% endblock %}
 {% block body %}
 <div class="center"><h1>🎁 Your Treasure Map</h1></div>
 
@@ -118,6 +121,43 @@ padding:12px;border:2px solid var(--ink);border-radius:12px;font-size:.9em">{{ g
 </div>
 {% endif %}
 
+<div class="card" id="journey-card">
+    <h2>My journey over time 📈</h2>
+    <p class="muted">This check-in was saved <b>only in this browser</b> (nothing sent anywhere).
+    Ride the tour again on another day and your lines will grow here — so you can see whether
+    things are shifting, and whether any changes you made helped.</p>
+    <p class="tiny muted">Saved check-ins on this device: <b id="journey-count">1</b></p>
+    <div style="position:relative; height:340px"><canvas id="journey-chart"></canvas></div>
+    <p class="tiny muted" id="journey-chart-note">Two or more check-ins are needed before a trend line appears —
+    the dashed vertical lines mark anything you log in the notes below.</p>
+
+    <h3>What changed, and when 🗓️</h3>
+    <p class="muted tiny">Log things like "started medication", "sleep schedule change", "therapy started".
+    They'll show as markers on the chart so you can line events up against how you felt.</p>
+    <form id="journey-log-form" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px">
+        <input id="journey-log-input" type="text" maxlength="120" placeholder="e.g. started 10mg med"
+               style="flex:1; min-width:220px">
+        <button class="btn" type="submit">Add note 📝</button>
+    </form>
+    <div id="journey-log"></div>
+
+    <h3>Share & compare 🔗</h3>
+    <p class="muted tiny">This code encodes only a handful of scale percentages — no name, no answers.
+    Show the QR to someone you trust (or paste the link) so a partner, family member or friend can
+    place their own results beside yours on the
+    <a href="{{ url_for('compare') }}">side-by-side page</a>. It's a conversation aid, not a verdict.</p>
+    <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:flex-start">
+        <div id="journey-qr" style="background:#fff; padding:6px; border:2px solid var(--ink); border-radius:12px"></div>
+        <div style="flex:1; min-width:220px">
+            <input id="journey-code" type="text" readonly onclick="this.select()"
+                   style="width:100%; font-family:monospace; font-size:.8em">
+            <button class="btn" type="button" id="journey-copy" style="margin-top:8px">Copy compare link 📋</button>
+            <p class="tiny muted" style="margin-top:10px">Keep it if you like — it contains no identifying information.</p>
+        </div>
+    </div>
+    <p style="margin-top:14px"><button class="btn secondary" type="button" id="journey-clear">Erase my local history 🧽</button></p>
+</div>
+
 <div class="center">
     <a class="btn" href="{{ url_for('world_view') }}">Peek at everyone else 🌍</a>
     <a class="btn secondary" href="{{ url_for('screen_start') }}">Ride again 🎢</a>
@@ -146,5 +186,8 @@ padding:12px;border:2px solid var(--ink);border-radius:12px;font-size:.9em">{{ g
         a.download = 'discussion-guide-for-my-doctor.txt';
         a.click(); URL.revokeObjectURL(a.href);
     }
+</script>
+<script>
+    if (window.NeuroJourney) NeuroJourney.initResults();
 </script>
 {% endblock %}

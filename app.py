@@ -16,6 +16,7 @@ import personality
 import character
 import dossier
 import context
+import trends
 
 def _session_secret():
     env = os.environ.get("NEURO_SECRET")
@@ -397,7 +398,14 @@ def screen_finish():
                            results=results, flags=flags, pairs=pairs,
                            tier=tier, ctx_by_id=ctx_by_id,
                            guide_link=bool(token),
+                           snapshot=trends.snapshot(pairs),
+                           metrics=trends.METRICS,
                            guide_text=context.discussion_text(pairs, flags, None, tier))
+
+
+@app.route('/compare')
+def compare():
+    return render_template('compare.html', metrics=trends.METRICS)
 
 
 # ---------------- IQ (CHC) ----------------
