@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Your Hero{% endblock %}
+{% block body %}
+<h1 class="center">🦸 Your Hero</h1>
+<div class="hero-wrap">
+  <div class="hero-card">
+    <img src="{{ url_for('hero_svg') }}" alt="your hero" class="hero-art">
+    <div class="hero-meta">
+      <p class="codename">{{ codename }}</p>
+      <p class="stage">Stage {{ done }}/{{ total_sections }} — {{ stage }}</p>
+      <p class="power">⚡ Power Level: <strong>{{ power }}</strong></p>
+      {% if dominant %}<p class="muted small">Dominant trait: {{ dominant }}</p>{% endif %}
+      {% for k, v in stats.items() %}
+      <div class="stat">
+        <span class="stat-name">{{ k }}</span>
+        <div class="bar"><div class="fill" style="width: {{ v }}%"></div></div>
+        <span class="stat-val">{{ v }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <h2 class="center">🗺️ Evolution Track</h2>
+  <ul class="quest-list">
+    {% for key, title, url in sections %}
+    <li class="{% if key in profile %}done{% else %}todo{% endif %}">
+      {% if key in profile %}✅{% else %}⬜{% endif %}
+      {{ title }}
+      {% if key not in profile %}<a class="btn secondary small" href="{{ url }}">Take it →</a>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+
+  {% if complete %}
+  <div class="unlocked center">
+    <p>🌟 <strong>All metrics complete!</strong> Your legend is fully forged.</p>
+    <a class="btn" href="{{ url_for('report_pdf') }}">⬇️ Download PDF dossier</a>
+    {% if minted %}
+      <a class="btn secondary" href="{{ url_for('nft_page') }}">View your token #{{ minted.id }} 🎫</a>
+    {% else %}
+      <form method="post" action="{{ url_for('nft_mint') }}">
+        <button class="btn gold">⛏️ Mint my unique collectible (NFT)</button>
+      </form>
+    {% endif %}
+  </div>
+  {% else %}
+  <p class="muted center">Complete every section to unlock the PDF dossier and mint a one-of-a-kind
+    collectible bound to your answers + username.</p>
+  {% endif %}
+</div>
+{% endblock %}

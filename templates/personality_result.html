@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Your Personality Profile{% endblock %}
+{% block body %}
+<h1 class="center">🌈 Your Big Five Profile</h1>
+<p class="muted center">{{ label }}</p>
+
+{% set icons = {"Openness":"🎨","Conscientiousness":"🗂️","Extraversion":"⚡","Agreeableness":"💞","Emotional Stability":"🧘"} %}
+{% for d in domains %}
+{% set s = scores[d] %}
+<div class="card">
+    <h2>{{ icons[d] }} {{ d }}
+        <span class="muted" style="font-weight:400;float:right">{{ s.score }}/100 · {{ s.band }}</span></h2>
+    <div style="background:#e9e4d8;border-radius:12px;height:18px;overflow:hidden;border:2px solid var(--ink)">
+        <div style="width:{{ s.score }}%;height:100%;
+             background:{% if s.band == 'High' %}var(--ok){% elif s.band == 'Low' %}var(--warn){% else %}var(--teal){% endif %};"></div>
+    </div>
+    <p class="muted" style="margin-top:8px">{{ interp[d][s.band] }}</p>
+</div>
+{% endfor %}
+
+<div class="card center">
+    <p class="muted">Personality is a preference map, not a verdict — every trait
+    has strengths. Retake anytime to see how stable your profile is over time.</p>
+    <a class="btn secondary small" href="{{ url_for('personality_test') }}">Retake 🔁</a>
+    <a class="btn secondary small" href="{{ url_for('dashboard') }}">Back to dashboard 📊</a>
+</div>
+<p class="muted center">Methodology: {{ citation }}</p>
+{% endblock %}

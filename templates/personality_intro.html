@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Personality Assessment{% endblock %}
+{% block body %}
+<div class="center">
+    <h1>🌈 Personality Map</h1>
+    <p class="muted" style="color:#eaf2ff">The science of what makes you, you.</p>
+</div>
+<div class="card">
+    <p><b>The Big Five</b> — the most widely validated model of personality in psychology.
+    You'll rate {{ n_items }} statements on how accurately they describe you.</p>
+    <p>Your profile is built across five traits:</p>
+    <p>🎨 <b>Openness</b> — curiosity, imagination, love of ideas<br>
+       🗂️ <b>Conscientiousness</b> — organisation, discipline, follow-through<br>
+       ⚡ <b>Extraversion</b> — social energy and enthusiasm<br>
+       💞 <b>Agreeableness</b> — warmth, empathy, cooperation<br>
+       🧘 <b>Emotional Stability</b> — calmness and resilience under stress</p>
+    <p class="muted">{{ n_items }} items · ~7 minutes · no right or wrong answers —
+    answer as you actually are.</p>
+    <a class="btn" href="{{ url_for('personality_test') }}">Start mapping ✨</a>
+</div>
+<p class="muted center">Methodology: {{ citation }}</p>
+{% endblock %}

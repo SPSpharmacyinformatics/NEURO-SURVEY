@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Personality Test{% endblock %}
+{% block body %}
+<h1 class="center">🌈 Personality Map</h1>
+<p class="muted center">How accurate is each statement about you?</p>
+<form method="post" action="{{ url_for('personality_result') }}">
+    <label class="muted">Age (anonymous, promise)</label>
+    <input type="number" name="age" min="10" max="99">
+    {% set ns = namespace(i=0) %}
+    {% for text, domain, rev in items %}
+    <div class="q-item">
+        <p>{{ loop.index }}. {{ text }}</p>
+        {% for s in scale %}
+        <label class="opt"><input type="radio" name="big5_{{ ns.i }}"
+               value="{{ loop.index }}" {% if loop.index0 == 2 %}required{% endif %}> {{ s }}</label>
+        {% endfor %}
+    </div>
+    {% set ns.i = ns.i + 1 %}
+    {% endfor %}
+    <div class="center"><button class="btn">Reveal my personality map 🌈</button></div>
+</form>
+{% endblock %}

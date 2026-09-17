@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Your Collectible{% endblock %}
+{% block body %}
+<h1 class="center">🎫 Your Minted Token</h1>
+{% if mint and cert_svg %}
+<div class="nft-wrap center">
+  <div class="cert-frame">{{ cert_svg | safe }}</div>
+  <p><strong>TOKEN #{{ mint.id }}</strong> · minted {{ mint.minted_at }}</p>
+  <p class="muted small">{{ codename }}</p>
+  <p class="mono tiny hash">{{ mint.token_hash }}</p>
+  <a class="btn" href="{{ url_for('nft_svg', dl=1) }}">⬇️ Download certificate (SVG)</a>
+  <a class="btn secondary" href="{{ url_for('certificate_pdf') }}">⬇️ Certificate PDF</a>
+  <a class="btn secondary" href="{{ url_for('report_pdf') }}">⬇️ Full dossier PDF</a>
+</div>
+{% else %}
+<p class="center">No token yet — finish all sections on your
+  <a href="{{ url_for('hero_page') }}">hero page</a>, then hit ⛏️ Mint.</p>
+{% endif %}
+{% endblock %}

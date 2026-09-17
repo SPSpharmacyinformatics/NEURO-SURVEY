@@ -110,6 +110,34 @@
         .confetti-piece { position: fixed; z-index: 99; font-size: 22px; pointer-events: none;
                           animation: fall linear forwards; }
         @keyframes fall { to { transform: translateY(105vh) rotate(720deg); opacity: .7; } }
+        .hero-card { display: flex; gap: 18px; align-items: flex-start; background: var(--paper);
+                     border: 3px solid var(--ink); border-radius: 22px; padding: 16px;
+                     box-shadow: 7px 7px 0 rgba(26,26,46,.35); flex-wrap: wrap; }
+        .hero-art { width: 240px; max-width: 100%; border-radius: 16px; border: 3px solid var(--ink);
+                    background: #10131f; }
+        .hero-meta { flex: 1; min-width: 220px; }
+        .codename { font-size: 1.25em; font-weight: 800; margin: 4px 0; transform: rotate(-.6deg); }
+        .stage { font-weight: 700; color: #5a6270; margin: 2px 0; }
+        .power { font-size: 1.05em; margin: 6px 0; }
+        .stat { display: flex; align-items: center; gap: 8px; margin: 7px 0; }
+        .stat-name { width: 84px; font-weight: 800; font-size: .85em; }
+        .stat-val { width: 30px; text-align: right; font-weight: 800; font-size: .85em; }
+        .bar { flex: 1; height: 12px; background: #e8ebf3; border: 2px solid var(--ink);
+               border-radius: 999px; overflow: hidden; }
+        .bar .fill { height: 100%; background: linear-gradient(90deg, var(--teal), var(--grape)); }
+        .quest-list { list-style: none; padding: 0; }
+        .quest-list li { background: white; border: 2.5px solid var(--ink); border-radius: 14px;
+                         padding: 10px 16px; margin: 8px 0; font-weight: 700;
+                         display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+        .quest-list li.done { background: #e9fbf0; }
+        .unlocked { background: #fff8dc; border: 3px dashed var(--ink); border-radius: 20px;
+                    padding: 16px; margin: 18px 0; }
+        .btn.gold { background: linear-gradient(90deg,#f5d76e,#c9a227); }
+        .cert-frame svg { max-width: 420px; width: 100%; border-radius: 18px;
+                          box-shadow: 8px 8px 0 rgba(26,26,46,.35); }
+        .hash { word-break: break-all; background: #10131f; color: #7fe3a0; padding: 8px 12px;
+                border-radius: 10px; display: inline-block; max-width: 460px; }
+        .tiny { font-size: .72em; } .mono { font-family: monospace; }
     </style>
     {% block head %}{% endblock %}
 </head>
@@ -124,6 +152,7 @@
             {% set u = user if user is defined else none %}
             {% if u %}
                 <a class="toplink" href="{{ url_for('dashboard') }}">📚 {{ u.username }}'s shelf</a>
+                <a class="toplink" href="{{ url_for('hero_page') }}">🦸 my hero</a>
                 <a class="toplink" href="{{ url_for('logout') }}">log out 👋</a>
             {% else %}
                 <a class="toplink" href="{{ url_for('login', next=request.path) }}">log in 🎟️</a>

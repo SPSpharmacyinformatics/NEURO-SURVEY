@@ -47,6 +47,17 @@
         {% else %}<p class="muted">not taken yet</p>
             <a class="btn secondary small" href="{{ url_for('eq_intro') }}">Take it 🔍</a>{% endif %}
     </div>
+    <div class="card">
+        <h2>🌈 Big Five</h2>
+        {% if big5 %}
+            <p style="margin:4px 0">
+            {% for d, s in big5.domains.items() %}
+                <span class="muted" style="font-size:.8em">{{ d }}: <b>{{ s.score }}</b></span>{{ ", " if not loop.last }}
+            {% endfor %}</p>
+            <p class="muted">latest · {{ big5.created_at[:10] }} · {{ big5_hist|length }} attempt(s)</p>
+        {% else %}<p class="muted">not taken yet</p>
+            <a class="btn secondary small" href="{{ url_for('personality_intro') }}">Take it 🌈</a>{% endif %}
+    </div>
 </div>
 
 {% if screen %}

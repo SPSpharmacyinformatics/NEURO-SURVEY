@@ -1,14 +1,18 @@
+import io
 import json
 import os
 import sqlite3
 
 from flask import (Flask, render_template, request, redirect, url_for,
-                   session, flash, Response)
+                   session, flash, Response, send_file)
 
 from correlations import combined_insights
 from instruments import (SCREEN_SECTIONS, score_instrument, QUESTIONS,
                          classify_profile)
 import iq_eq
+import personality
+import character
+import dossier
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("NEURO_SECRET", "neuro-survey-local-key")
@@ -49,8 +53,18 @@ def init_db():
             user_id INTEGER,
             age INTEGER, total INTEGER, subscales TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS personality_results(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            age INTEGER, domains TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS heroes(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER UNIQUE NOT NULL,
+            codename TEXT, token_hash TEXT,
+            minted_at DATETIME DEFAULT CURRENT_TIMESTAMP);
     """)
-    for table in ("responses", "screens", "iq_results", "eq_results"):
+    for table in ("responses", "screens", "iq_results", "eq_results", "personality_results"):
         try:
             conn.execute(f"ALTER TABLE {table} ADD COLUMN user_id INTEGER")
         except sqlite3.OperationalError:
@@ -131,6 +145,13 @@ def dashboard():
                            (uid,)).fetchall()
     scr_rows = conn.execute("SELECT * FROM screens WHERE user_id=? ORDER BY id DESC LIMIT 10",
                             (uid,)).fetchall()
+    p5_rows = conn.execute("SELECT * FROM personality_results WHERE user_id=? ORDER BY id DESC LIMIT 10",
+                           (uid,)).fetchall()
+    p5_latest = None
+    if p5_rows:
+        d = dict(p5_rows[0])
+        d["domains"] = json.loads(d["domains"])
+        p5_latest = d
     map_rows = conn.execute("SELECT * FROM responses WHERE user_id=? ORDER BY id DESC LIMIT 10",
                             (uid,)).fetchall()
     conn.close()
@@ -181,6 +202,7 @@ def dashboard():
                            screen_domains=scr_domains, screen_hist=scr_rows,
                            map_latest=map_latest, map_hist=map_rows,
                            map_scores=map_scores,
+                           big5=p5_latest, big5_hist=p5_rows,
                            insights=insights)
 
 
@@ -377,6 +399,48 @@ def iq_result():
                            domains=domains_out)
 
 
+# ---------------- Personality (IPIP Big-Five) ----------------
+@app.route('/personality')
+def personality_intro():
+    gate = require_login()
+    return gate or render_template('personality_intro.html',
+                                   citation=personality.CITATION,
+                                   n_items=len(personality.ITEMS))
+
+
+@app.route('/personality/test')
+def personality_test():
+    gate = require_login()
+    return gate or render_template('personality_test.html',
+                                   items=personality.ITEMS,
+                                   scale=personality.SCALE)
+
+
+@app.route('/personality/result', methods=['POST'])
+def personality_result():
+    gate = require_login()
+    if gate:
+        return gate
+    answers = [request.form.get(f'big5_{i}') for i in range(len(personality.ITEMS))]
+    if not personality.validate_complete(answers):
+        return redirect(url_for('personality_test'))
+
+    scores = personality.score(answers)
+    label = personality.profile_label(scores)
+    age = request.form.get('age')
+    conn = get_db()
+    conn.execute("INSERT INTO personality_results(user_id, age, domains) VALUES(?,?,?)",
+                 (current_user()["id"],
+                  int(age) if str(age or '').isdigit() else None,
+                  json.dumps(scores)))
+    conn.commit()
+    conn.close()
+    return render_template('personality_result.html',
+                           scores=scores, domains=personality.DOMAINS,
+                           interp=personality.INTERPRETATION, label=label,
+                           citation=personality.CITATION)
+
+
 # ---------------- EQ ----------------
 @app.route('/eq')
 def eq_intro():
@@ -407,6 +471,127 @@ def eq_result():
     conn.close()
     return render_template('eq_result.html', total=total, total_max=total_max,
                            band=iq_eq.eq_band(total), subs=subs, subsmax=subsmax)
+
+
+# ---------------- hero (gamified character) ----------------
+def _hero_context():
+    user = current_user()
+    conn = get_db()
+    state = character.hero_state(conn, user["id"], user["username"])
+    conn.close()
+    return user, state
+
+
+@app.route('/character')
+def hero_page():
+    gate = require_login()
+    if gate:
+        return gate
+    user, state = _hero_context()
+    return render_template('character.html', user=user,
+                           sections=character.SECTIONS, **state)
+
+
+@app.route('/character.svg')
+def hero_svg():
+    gate = require_login()
+    if gate:
+        return gate
+    import charart
+    user, state = _hero_context()
+    shapes = charart.build(state["done"], state["stats"], state["dominant"],
+                           int(state["fingerprint"][:12], 16) % 10**9)
+    return Response(charart.render_svg(shapes), mimetype='image/svg+xml')
+
+
+@app.route('/nft')
+def nft_page():
+    gate = require_login()
+    if gate:
+        return gate
+    import charart
+    user, state = _hero_context()
+    cert_svg = None
+    if state["minted"]:
+        m = state["minted"]
+        shapes = charart.build(state["done"], state["stats"], state["dominant"],
+                               int(m["token_hash"][:12], 16) % 10**9)
+        art_svg = charart.render_svg(shapes)
+        cert_svg = charart.certificate_svg(m["id"], m["token_hash"],
+                                           state["codename"], user["username"],
+                                           m["minted_at"], art_svg)
+    return render_template('nft.html', user=user, mint=state["minted"],
+                           complete=state["complete"], cert_svg=cert_svg,
+                           codename=state["codename"])
+
+
+@app.route('/nft.svg')
+def nft_svg():
+    gate = require_login()
+    if gate:
+        return gate
+    import charart
+    user, state = _hero_context()
+    m = state.get("minted")
+    if not m:
+        return redirect(url_for('nft_page'))
+    shapes = charart.build(state["done"], state["stats"], state["dominant"],
+                           int(m["token_hash"][:12], 16) % 10**9)
+    art_svg = charart.render_svg(shapes)
+    svg = charart.certificate_svg(m["id"], m["token_hash"], state["codename"],
+                                  user["username"], m["minted_at"], art_svg)
+    dl = request.args.get('dl')
+    return Response(svg, mimetype='image/svg+xml',
+                    headers={} if not dl else {
+                        "Content-Disposition":
+                        f'attachment; filename="neuro-token-{m["id"]}.svg"'})
+
+
+@app.route('/nft/mint', methods=['POST'])
+def nft_mint():
+    gate = require_login()
+    if gate:
+        return gate
+    user, state = _hero_context()
+    if not state["complete"]:
+        flash("Complete all four sections before minting your collectible.")
+        return redirect(url_for('hero_page'))
+    conn = get_db()
+    row, fresh = character.mint(conn, user["id"], user["username"], state["profile"])
+    conn.close()
+    flash("Minted TOKEN #%d just for you!" % row["id"] if fresh
+          else "Your collectible was already minted as TOKEN #%d." % row["id"])
+    return redirect(url_for('nft_page'))
+
+
+@app.route('/report.pdf')
+def report_pdf():
+    gate = require_login()
+    if gate:
+        return gate
+    user, state = _hero_context()
+    if not state["complete"]:
+        flash("Finish all four sections to unlock your PDF dossier.")
+        return redirect(url_for('hero_page'))
+    data = dossier.build_dossier(user["username"], state)
+    return send_file(io.BytesIO(data), mimetype='application/pdf',
+                     as_attachment=True,
+                     download_name=f"neuro_dossier_{user['username']}.pdf")
+
+
+@app.route('/certificate.pdf')
+def certificate_pdf():
+    gate = require_login()
+    if gate:
+        return gate
+    user, state = _hero_context()
+    m = state.get("minted")
+    if not m:
+        return redirect(url_for('nft_page'))
+    data = dossier.build_certificate_pdf(user["username"], state, m)
+    return send_file(io.BytesIO(data), mimetype='application/pdf',
+                     as_attachment=True,
+                     download_name=f"neuro_token_{m['id']}_{user['username']}.pdf")
 
 
 BASE_URL = "https://survey.sps.dpdns.org"

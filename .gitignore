@@ -1,1 +1,4 @@
 test-artifacts/
+__pycache__/
+*.db
+*.root-orig

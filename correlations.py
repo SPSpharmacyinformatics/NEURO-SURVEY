@@ -35,8 +35,9 @@ def combined_insights(iq, eq, screen, maps):
     eq_subs = eq.get("subscales", {}) if eq else {}
     flags = [f.lower() for f in (screen.get("flags") or [])] if screen else []
     dom = {}
-    for title, band, score, mx in (screen.get("domains") or []):
-        dom[title.lower()] = (band, score, mx)
+    if screen:
+        for title, band, score, mx in (screen.get("domains") or []):
+            dom[title.lower()] = (band, score, mx)
 
     has_adhd = any("attention" in f for f in flags)
     has_asd = any("autism" in f for f in flags)
