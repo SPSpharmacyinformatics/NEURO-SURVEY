@@ -1,7 +1,9 @@
 import io
 import json
 import os
+import secrets
 import sqlite3
+import time
 
 from flask import (Flask, render_template, request, redirect, url_for,
                    session, flash, Response, send_file)
@@ -13,9 +15,29 @@ import iq_eq
 import personality
 import character
 import dossier
+import context
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("NEURO_SECRET", "neuro-survey-local-key")
+
+# In-memory Discussion Guide stash — never written to disk, self-purging.
+# Holds only screening scores for ~30 minutes so the user can download the
+# guide, then it's gone. Nothing touches a database.
+_GUIDANCE = {}
+_GUIDE_TTL = 30 * 60
+
+
+def _pop_guidance():
+    """Fetch and remove the current user's guide payload from memory."""
+    now = time.time()
+    stale = [k for k, (ts, *_rest) in _GUIDANCE.items() if now - ts > _GUIDE_TTL]
+    for k in stale:
+        _GUIDANCE.pop(k, None)
+    tok = session.get('guide_token')
+    entry = _GUIDANCE.pop(tok, None) if tok else None
+    if entry and now - entry[0] <= _GUIDE_TTL:
+        return entry[1:]
+    return None
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'neuro_survey.db')
 
@@ -305,6 +327,8 @@ def screen_next(idx):
     gate = require_login()
     if gate:
         return gate
+    if 'screen_data' not in session:
+        return redirect(url_for('screen_start'))
     section = SCREEN_SECTIONS[idx]
     session['screen_data'][str(idx)] = score_instrument(section, request.form)
     session.modified = True
@@ -336,9 +360,17 @@ def screen_finish():
     conn.close()
     session.pop('screen_data', None)
     session.pop('screen_identity', None)
+    pairs = list(zip(SCREEN_SECTIONS, results))
+    tier = context.support_tier(pairs)
+    ctx_by_id = {s['id']: context.card_context(s, r) for s, r in pairs}
+    token = secrets.token_urlsafe(12)
+    _GUIDANCE[token] = (time.time(), pairs, flags, tier)
+    session['guide_token'] = token
     return render_template('screen_result.html', sections=SCREEN_SECTIONS,
-                           results=results, flags=flags,
-                           pairs=list(zip(SCREEN_SECTIONS, results)))
+                           results=results, flags=flags, pairs=pairs,
+                           tier=tier, ctx_by_id=ctx_by_id,
+                           guide_link=bool(token),
+                           guide_text=context.discussion_text(pairs, flags, None, tier))
 
 
 # ---------------- IQ (CHC) ----------------
@@ -618,6 +650,40 @@ def sitemap():
            f"{urls}\n"
            "</urlset>\n")
     return Response(xml, mimetype='application/xml')
+
+
+@app.route('/guide.txt')
+def guide_txt():
+    gate = require_login()
+    if gate:
+        return gate
+    payload = _pop_guidance()
+    if payload is None:
+        flash("Your discussion guide has expired or is unavailable — retake a "
+              "screen to regenerate it.")
+        return redirect(url_for('screen_start'))
+    pairs, flags, tier = payload
+    body = context.discussion_text(pairs, flags, None, tier)
+    return Response(body, mimetype='text/plain; charset=utf-8', headers={
+        'Content-Disposition':
+        'attachment; filename="discussion-guide-for-my-doctor.txt"'})
+
+
+@app.route('/guide.pdf')
+def guide_pdf():
+    gate = require_login()
+    if gate:
+        return gate
+    payload = _pop_guidance()
+    if payload is None:
+        flash("Your discussion guide has expired or is unavailable — retake a "
+              "screen to regenerate it.")
+        return redirect(url_for('screen_start'))
+    pairs, flags, tier = payload
+    data = dossier.build_guide_pdf(current_user()["username"], pairs, flags, tier)
+    return send_file(io.BytesIO(data), mimetype='application/pdf',
+                     as_attachment=True,
+                     download_name="discussion-guide-for-my-doctor.pdf")
 
 
 if __name__ == '__main__':

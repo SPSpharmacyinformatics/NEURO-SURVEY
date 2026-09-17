@@ -431,7 +431,12 @@ def score_instrument(section, form):
     for lo, hi, name, lv in section["bands"]:
         if lo <= score <= hi:
             band, level = name, lv
-    return {"score": score, "max": section["max"], "band": band,
-            "flag": score >= section["cutoff"], "level": level,
-            "note": f"Clinical threshold is {section['cutoff']}+ on the "
-                    f"{section['instrument']}."}
+    result = {"score": score, "max": section["max"], "band": band,
+              "flag": score >= section["cutoff"], "level": level,
+              "note": f"Clinical threshold is {section['cutoff']}+ on the "
+                      f"{section['instrument']}."}
+    if sid == "phq9":
+        # Item 9 (index 8) is the self-harm/thoughts-of-death item — kept for
+        # compassionate support routing, never stored long-term.
+        result["item9"] = int(form.get("phq9_8", 0) or 0)
+    return result

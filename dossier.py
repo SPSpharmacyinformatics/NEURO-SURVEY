@@ -190,3 +190,92 @@ def build_certificate_pdf(username, state, mint_row):
     pdf.text(60, 628, 8, "username at time of minting. Verify by re-hashing the dossier.",
              color=MUTED)
     return pdf.out()
+
+
+def _wrap(text, width):
+    words, lines, cur = text.split(), [], ""
+    for w in words:
+        trial = (cur + " " + w).strip()
+        if len(trial) <= width:
+            cur = trial
+        else:
+            if cur:
+                lines.append(cur)
+            cur = w
+    if cur:
+        lines.append(cur)
+    return lines
+
+
+def build_guide_pdf(username, pairs, flags, tier):
+    """Discussion Guide PDF for a practitioner (screening-only summary)."""
+    import context
+
+    blocks = []
+    blocks.append(("h", "Screens that crossed a clinical threshold"))
+    flagged = [s for s, r in pairs if r and r.get("flag")]
+    if flagged:
+        for s in flagged:
+            blocks.append(("m", "- %s (%s)" % (s["title"], s["instrument"])))
+    else:
+        blocks.append(("m", "- None — everything landed within range today."))
+    for section, r in pairs:
+        if not r:
+            continue
+        info = context.PLAIN.get(section["id"])
+        if not info:
+            continue
+        score = "%d" % r["score"] + ("/%d" % r["max"] if r.get("max") else "")
+        blocks.append(("h", "[%s] %s - %s (%s)" %
+                       (section["instrument"], section["title"],
+                        score, r.get("band", ""))))
+        blocks.append(("p", "Measure: " + info["what"]))
+        if r.get("flag"):
+            blocks.append(("p", "Daily life: " + info["impact"]))
+            blocks.append(("p", "Points to raise:"))
+            for pt in info["points"]:
+                blocks.append(("m", "- " + pt))
+    if tier["tier"] != "ok":
+        blocks.append(("h", "Support resources"))
+        blocks.append(("p", context.RESOURCES["emergency"]))
+        blocks.append(("p", "- UAE: " + "; ".join(
+            "%s (%s)" % (n, d) for n, d in context.RESOURCES["uae"])))
+        blocks.append(("p", "- International: " + "; ".join(
+            "%s (%s)" % (n, d) for n, d in context.RESOURCES["intl"])))
+    blocks.append(("p", "This document is screening-level information, not a "
+                        "medical diagnosis or treatment plan."))
+
+    pdf = pdfdoc.PDF()
+    page = pdf.add_page()
+    _header(pdf, "Discussion Guide for My Doctor",
+            "NEURO-SURVEY Omni Assessment - screening summary")
+    y = 108
+    pageno = 1
+
+    def emit(text, size, bold=False, color=INK, indent=0):
+        nonlocal y, page, pageno
+        for ln in _wrap(text, 86 - indent):
+            if y > pdf.h - 70:
+                _footer(pdf, pageno, username)
+                pageno += 1
+                page = pdf.add_page()
+                _header(pdf, "Discussion Guide for My Doctor", "continued")
+                y = 108
+            pdf.text(36 + indent, y, size, _t(ln), bold=bold, color=color)
+            y += size + 3
+
+    emit("DISCUSSION GUIDE FOR MY DOCTOR / THERAPIST", 15, bold=True)
+    emit("Date: %s  -  screening only, not a diagnosis" %
+         datetime.date.today().isoformat(), 9, color=MUTED)
+    emit("Confidential by design: only age, gender and scores exist; your name "
+         "and raw answers are never stored.", 9, color=MUTED)
+    emit("", 6)
+    for kind, txt in blocks:
+        if kind == "h":
+            emit(txt, 11, bold=True)
+        elif kind == "p":
+            emit(txt, 9.5)
+        else:
+            emit(txt, 9.5, color=MUTED, indent=12)
+    _footer(pdf, pageno, username)
+    return pdf.out()

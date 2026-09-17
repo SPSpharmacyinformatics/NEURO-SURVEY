@@ -23,6 +23,48 @@
 </div>
 {% endif %}
 
+{% if tier and tier.tier != "ok" %}
+{% if tier.tier == "crisis" %}
+<div class="card" style="background:#ffe8e8; border-color:#c0392b">
+    <h2 style="color:#c0392b">💛 You matter — let's line up backup today</h2>
+    {% for reason in tier.reasons %}<p><b>Regarding:</b> {{ reason }}</p>{% endfor %}
+    <p>These are screening results, not a verdict. But the fact that you answered
+    honestly is important, and the next step is a warm conversation, not silence.
+    There is zero shame in reaching out — here's a non-commercial, confidential
+    route list:</p>
+    <p><b>{{ tier.resources.emergency }}</b></p>
+    <p class="muted" style="margin:6px 0"><b>UAE:</b></p>
+    {% for name, desc in tier.resources.uae %}
+        <p class="muted" style="margin:2px 0">☎️ <b>{{ name }}</b> — {{ desc }}</p>
+    {% endfor %}
+    <p class="muted" style="margin:6px 0"><b>International:</b></p>
+    {% for name, desc in tier.resources.intl %}
+        <p class="muted" style="margin:2px 0">☎️ <b>{{ name }}</b> — {{ desc }}</p>
+    {% endfor %}
+    <p class="muted" style="margin-top:10px">You don't need to be in "complete crisis" to call.
+    Being overwhelmed is enough. They've heard it all — talk to them like a friend who knows.</p>
+</div>
+{% else %}
+<div class="card" style="background:#fff3cd">
+    <h2>🪧 A flag on your mood map — here's where real support lives</h2>
+    {% for reason in tier.reasons %}<p>• {{ reason }}</p>{% endfor %}
+    <p class="muted">You're past "just push through it" territory — that's worth
+    saying out loud to someone equipped to help. These are private, non-commercial
+    lines:</p>
+    <p class="muted" style="margin:6px 0"><b>UAE:</b></p>
+    {% for name, desc in tier.resources.uae %}
+        <p class="muted" style="margin:2px 0">☎️ <b>{{ name }}</b> — {{ desc }}</p>
+    {% endfor %}
+    <p class="muted" style="margin:6px 0"><b>International:</b></p>
+    {% for name, desc in tier.resources.intl %}
+        <p class="muted" style="margin:2px 0">☎️ <b>{{ name }}</b> — {{ desc }}</p>
+    {% endfor %}
+    <p class="muted" style="margin-top:10px">In an emergency, call your local number
+    (UAE: <b>998</b> medical / <b>999</b> police) or go to the nearest emergency department.</p>
+</div>
+{% endif %}
+{% endif %}
+
 <h2>🔍 The domain gossip</h2>
 {% for section, r in pairs %}
 <div class="card wobble">
@@ -42,13 +84,67 @@
         {% endfor %}
         </div>
     {% endif %}
+    {% set ctx = ctx_by_id.get(section.id) %}
+    {% if ctx %}
+        <p class="muted" style="margin-top:8px">💡 {{ ctx.what }}</p>
+        {% if ctx.elevated %}
+            <p class="muted" style="margin-top:6px">🗺️ <b>If this feels familiar:</b> {{ ctx.impact }}</p>
+            <div style="background:#f3f7ff;border:2px dashed var(--ink);border-radius:14px;padding:10px 14px;margin-top:8px">
+                <b>Say it to your clinician:</b>
+                {% for pt in ctx.points %}<p class="muted" style="margin:4px 0">• {{ pt }}</p>{% endfor %}
+            </div>
+        {% endif %}
+    {% endif %}
     <p class="muted" style="margin-top:8px">💡 {{ r.note }}</p>
 </div>
 {% endfor %}
+
+{% if guide_link %}
+<div class="card" style="background:#f6f0ff; border:3px solid var(--grape)">
+    <h2>🗣️ Discussion Guide for my doctor / therapist</h2>
+    <p class="muted">A formatted summary of exactly what you just answered — your
+    scores, what they mean in plain words, and what to say so you don't have to
+    explain yourself from the cold start. Hand it over, or read it aloud. It's yours.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin:10px 0">
+        <button class="btn secondary" onclick="copyGuide()">📋 Copy text</button>
+        <button class="btn secondary" onclick="dlTxt()">⬇️ Save as .txt</button>
+        <a class="btn pink" href="{{ url_for('guide_pdf') }}">🖨️ Download PDF</a>
+    </div>
+    <details>
+        <summary style="cursor:pointer;font-weight:800;color:var(--grape)">Preview the guide 👀</summary>
+        <pre id="guide-text" style="white-space:pre-wrap;font-family:inherit;background:#fff;
+padding:12px;border:2px solid var(--ink);border-radius:12px;font-size:.9em">{{ guide_text }}</pre>
+    </details>
+</div>
+{% endif %}
 
 <div class="center">
     <a class="btn" href="{{ url_for('world_view') }}">Peek at everyone else 🌍</a>
     <a class="btn secondary" href="{{ url_for('screen_start') }}">Ride again 🎢</a>
 </div>
 {% if flags %}<script>party(80);</script>{% else %}<script>party(35);</script>{% endif %}
+<script>
+    function getGuideText() {
+        return document.getElementById('guide-text').textContent;
+    }
+    function copyGuide() {
+        const t = getGuideText();
+        const done = () => alert('Copied to clipboard 📋');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(t).then(done, () => fallbackCopy(t, done));
+        } else { fallbackCopy(t, done); }
+    }
+    function fallbackCopy(t, done) {
+        const ta = document.createElement('textarea');
+        ta.value = t; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); ta.remove(); done();
+    }
+    function dlTxt() {
+        const blob = new Blob([getGuideText()], {type: 'text/plain;charset=utf-8'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'discussion-guide-for-my-doctor.txt';
+        a.click(); URL.revokeObjectURL(a.href);
+    }
+</script>
 {% endblock %}
