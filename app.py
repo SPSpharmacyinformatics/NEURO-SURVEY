@@ -17,8 +17,30 @@ import character
 import dossier
 import context
 
+def _session_secret():
+    env = os.environ.get("NEURO_SECRET")
+    if env:
+        return env
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".neuro_secret")
+    try:
+        with open(path, "r") as fh:
+            existing = fh.read().strip()
+        if existing:
+            return existing
+    except OSError:
+        pass
+    generated = secrets.token_hex(32)
+    try:
+        with open(path, "w") as fh:
+            fh.write(generated)
+        os.chmod(path, 0o600)
+    except OSError:
+        pass
+    return generated
+
+
 app = Flask(__name__)
-app.secret_key = os.environ.get("NEURO_SECRET", "neuro-survey-local-key")
+app.secret_key = _session_secret()
 
 # In-memory Discussion Guide stash — never written to disk, self-purging.
 # Holds only screening scores for ~30 minutes so the user can download the
