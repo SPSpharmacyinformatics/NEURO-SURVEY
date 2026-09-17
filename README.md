@@ -5,6 +5,12 @@ across 17 parameters of the neurodivergent spectrum (Executive Function,
 Sensory Sensitivity, Masking Effort, …) and visualizes their "Spiky Profile"
 against the standard baseline, plus an anonymized community World View.
 
+## Live Demo / Public Instance
+
+Try it now: **https://survey.sps.dpdns.org** — free, no registration required.
+(Privacy note: your name is never stored; only anonymized age, gender, and
+scores are persisted for the community World View.)
+
 ## Run
 
 ```sh

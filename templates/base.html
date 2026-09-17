@@ -3,7 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}NEURO-SURVEY{% endblock %}</title>
+    <title>{% block title %}The Brain Circus | Free & Private Screening{% endblock %}</title>
+    <meta name="description" content="{% block metadesc %}A free, privacy-first, open-source neurodivergent screening suite built on validated clinical instruments (PHQ-9, GAD-7, ASRS v1.1, AQ-10, MDQ, PC-PTSD-5, IPIP-50 and DSM-5-TR trait domains, CHC cognitive battery, EQ). No email, no password, no data harvesting.{% endblock %}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{% block canonical %}https://survey.sps.dpdns.org/{{ request.path.lstrip('/') }}{% endblock %}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="The Brain Circus — NEURO-SURVEY">
+    <meta property="og:url" content="https://survey.sps.dpdns.org/">
+    <meta property="og:title" content="{% block ogtitle %}The Brain Circus | Free & Private Neurodivergent Screening{% endblock %}">
+    <meta property="og:description" content="{% block ogdesc %}Free & private screening for ADHD, Autism, mood and CHC cognitive domains using validated clinical instruments. Zero registration.{% endblock %}">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="{% block twittertitle %}The Brain Circus{% endblock %}">
+    <meta name="twitter:description" content="{% block twitterdesc %}Free & private neurodivergent screening with validated instruments.{% endblock %}">
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
         :root {

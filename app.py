@@ -3,7 +3,7 @@ import os
 import sqlite3
 
 from flask import (Flask, render_template, request, redirect, url_for,
-                   session, flash)
+                   session, flash, Response)
 
 from correlations import combined_insights
 from instruments import (SCREEN_SECTIONS, score_instrument, QUESTIONS,
@@ -407,6 +407,32 @@ def eq_result():
     conn.close()
     return render_template('eq_result.html', total=total, total_max=total_max,
                            band=iq_eq.eq_band(total), subs=subs, subsmax=subsmax)
+
+
+BASE_URL = "https://survey.sps.dpdns.org"
+
+CRAWLABLE_ROUTES = ["/", "/quick-map", "/world-view",
+                    "/screen", "/iq", "/eq", "/personality"]
+
+
+@app.route('/robots.txt')
+def robots():
+    return Response(
+        "User-agent: *\n"
+        "Allow: /\n"
+        f"Sitemap: {BASE_URL}/sitemap.xml\n",
+        mimetype='text/plain')
+
+
+@app.route('/sitemap.xml')
+def sitemap():
+    urls = "\n".join(
+        f"  <url><loc>{BASE_URL}{path}</loc></url>" for path in CRAWLABLE_ROUTES)
+    xml = ('<?xml version="1.0" encoding="UTF-8"?>\n'
+           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+           f"{urls}\n"
+           "</urlset>\n")
+    return Response(xml, mimetype='application/xml')
 
 
 if __name__ == '__main__':

@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% from "_blip.html" import blip %}
-{% block title %}Omni Assessment — NEURO-SURVEY{% endblock %}
+{% block title %}The Brain Circus | Free & Private Neurodivergent Screening Tool{% endblock %}
+{% block metadesc %}A privacy-first, open-source screening tool for ADHD, Autism, mood and CHC cognitive domains using validated clinical instruments. Zero registration required.{% endblock %}
+{% block ogtitle %}The Brain Circus | Free & Private Neurodivergent Screening Tool{% endblock %}
+{% block ogdesc %}Screening for ADHD, Autism, mood and CHC cognitive domains using validated instruments (PHQ-9, GAD-7, ASRS v1.1, AQ-10, MDQ, PC-PTSD-5, IPIP-50, DSM-5-TR). Zero registration.{% endblock %}
 {% block body %}
 <div class="center">
     <h1>🎪 The Brain Circus</h1>
@@ -59,5 +62,16 @@
     <h2>The Original Wiggly Map</h2>
     <p class="muted">17 sliders of self-discovery + the community World View. The one that started it all.</p>
     <a class="btn secondary" href="{{ url_for('quick_map') }}">Get wiggly 🐛</a>
+</div>
+
+<div class="card" style="background:#f3f7ff">
+    <h3 style="margin-top:0">What's actually in here?</h3>
+    <p class="muted" style="margin:0">Every instrument is a published clinical screening battery with real
+    cutoffs: <b>PHQ-9</b> (depression), <b>GAD-7</b> (anxiety), <b>ASRS v1.1</b> Part A (adult ADHD),
+    <b>AQ-10</b> (autism spectrum), <b>MDQ</b> (bipolar screen), <b>PC-PTSD-5</b> (trauma), the
+    <b>IPIP-50</b> Big Five alongside <b>DSM-5-TR</b> PID-5 trait domains, a <b>CHC-based cognitive
+    battery</b> (Gf, Gc, Gwm, Gv, Gq, Gs) and the <b>Empathy Quotient</b>. Scores are compared against
+    published clinical thresholds. Only age, gender and scores are stored — never your name, email or
+    identifying data. <b>This is screening-level and not a medical diagnosis.</b></p>
 </div>
 {% endblock %}
