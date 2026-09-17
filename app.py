@@ -10,7 +10,7 @@ from flask import (Flask, render_template, request, redirect, url_for,
 
 from correlations import combined_insights
 from instruments import (SCREEN_SECTIONS, score_instrument, QUESTIONS,
-                         classify_profile)
+                         classify_profile, SECTION_QCOUNTS, TOTAL_QUESTIONS)
 import iq_eq
 import personality
 import character
@@ -339,9 +339,14 @@ def screen_section(idx):
         return redirect(url_for('screen_start'))
     if idx >= len(SCREEN_SECTIONS):
         return redirect(url_for('screen_finish'))
+    qdone = sum(SECTION_QCOUNTS[:idx])
+    qremaining = TOTAL_QUESTIONS - qdone
+    eta_min = max(1, round(qremaining * 7 / 60))
     return render_template('screen_section.html',
                            section=SCREEN_SECTIONS[idx], idx=idx,
-                           total=len(SCREEN_SECTIONS))
+                           total=len(SCREEN_SECTIONS),
+                           qremaining=qremaining, qdone=qdone,
+                           qtotal=TOTAL_QUESTIONS, eta_min=eta_min)
 
 
 @app.route('/screen/<int:idx>/next', methods=['POST'])

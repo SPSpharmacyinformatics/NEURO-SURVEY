@@ -3,12 +3,17 @@
 {% block title %}{{ section.title }} — Screen{% endblock %}
 {% block body %}
 <div class="progress"><div style="width:{{ ((idx + 1) / total * 100)|round(0) }}%"></div></div>
-<p class="muted">Stop {{ idx + 1 }} of {{ total }} · <b>{{ section.instrument }}</b></p>
+<p class="muted">Stop {{ idx + 1 }} of {{ total }} · <b>{{ section.instrument }}</b>
+    · {{ qremaining }} question{{ '' if qremaining == 1 else 's' }} to go
+    · about {{ eta_min }} min left ⏱️</p>
 <h2>{{ section.title }}</h2>
 
 {{ blip("happy", ["Honesty mode: ON 🙌", "No wrong answers, promise! 🤙", "You're doing great 🚀", "Blip is taking notes 📝"][idx % 4]) }}
 
-<form method="post" action="{{ url_for('screen_next', idx=idx) }}">
+<p class="muted tiny">💾 Your answers save automatically on this device as you go — you can safely
+close the tab and pick up later. Nothing is sent anywhere until you finish.</p>
+
+<form method="post" id="screen-form" action="{{ url_for('screen_next', idx=idx) }}">
 
 {% if section.id in ('phq9', 'gad7') %}
     <p class="muted">Over the last 2 weeks, how often have these critters visited?</p>
@@ -103,4 +108,20 @@
     <button class="btn">{% if idx + 1 < total %}Next stop! 🚌{% else %}Open my results! 🎁{% endif %}</button>
 </div>
 </form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    var idx = {{ idx }}, form = document.getElementById("screen-form");
+    var d = NeuroDraft.read();
+    if (d && d.sections && d.sections[idx]) NeuroDraft.apply(form, d.sections[idx]);
+    var timer = null;
+    function save() { NeuroDraft.saveSection(idx, form); }
+    form.addEventListener("input", function () { clearTimeout(timer); timer = setTimeout(save, 300); });
+    form.addEventListener("change", function () { clearTimeout(timer); timer = setTimeout(save, 300); });
+    form.addEventListener("submit", save);
+    window.addEventListener("pagehide", save);
+})();
+</script>
 {% endblock %}

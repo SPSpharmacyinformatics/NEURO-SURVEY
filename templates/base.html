@@ -158,7 +158,36 @@
         .hash { word-break: break-all; background: #10131f; color: #7fe3a0; padding: 8px 12px;
                 border-radius: 10px; display: inline-block; max-width: 460px; }
         .tiny { font-size: .72em; } .mono { font-family: monospace; }
+        /* ---- low-sensory ("calm") mode: less motion, less noise ---- */
+        html.calm .floaties { display: none !important; }
+        html.calm .confetti-piece { display: none !important; }
+        html.calm *, html.calm *::before, html.calm *::after {
+            animation: none !important; transition: none !important;
+        }
+        html.calm body { background: var(--paper); }
+        html.calm .card, html.calm .q-item, html.calm .btn, html.calm .hero-card,
+        html.calm .unlocked, html.calm .gh-badge, html.calm input, html.calm select {
+            box-shadow: none !important;
+        }
+        html.calm .btn { border-width: 3px; }
+        html.calm .muted { color: #3d4657; }
+        html.calm .progress > div { background: var(--ink) !important; }
+        .calm-btn { border: 2.5px solid var(--ink); background: var(--paper);
+                    border-radius: 999px; padding: 6px 14px; font: inherit; font-weight: 800;
+                    cursor: pointer; color: var(--ink); }
+        html.calm .calm-btn { background: var(--sun); }
     </style>
+    <script>
+        (function () {
+            try {
+                var s = localStorage.getItem("neuro_calm");
+                if (s === "1" || (s === null && window.matchMedia &&
+                        window.matchMedia("(prefers-reduced-motion: reduce)").matches)) {
+                    document.documentElement.classList.add("calm");
+                }
+            } catch (e) {}
+        })();
+    </script>
     {% block head %}{% endblock %}
 </head>
 <body>
@@ -178,6 +207,8 @@
                 <a class="toplink" href="{{ url_for('login', next=request.path) }}">log in 🎟️</a>
             {% endif %}
             <a class="toplink" href="#" onclick="openPrivacy(); return false;">🔒 privacy</a>
+            <button type="button" id="calm-toggle" class="calm-btn" aria-pressed="false"
+                    onclick="NeuroCalm.toggle(); return false;">🎈 calm mode: off</button>
         </div>
         {% block body %}{% endblock %}
         <p class="disclaimer">
@@ -231,6 +262,7 @@
     </script>
     <script>
         function party(n) {
+            if (NeuroCalm.isOn()) return;
             const bits = ["🎉","⭐","🎊","💛","🧠","🌈","✨"];
             for (let i = 0; i < (n || 60); i++) {
                 const s = document.createElement("span");
@@ -245,6 +277,7 @@
             }
         }
     </script>
+    <script src="/static/js/neuro_ui.js"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

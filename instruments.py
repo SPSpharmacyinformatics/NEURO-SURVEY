@@ -213,6 +213,18 @@ PID5 = {
 # trauma, then deep personality profiling.
 SCREEN_SECTIONS = [PHQ9, GAD7, ASRS, AQ10, MDQ, PCPTSD5, BIG5, PID5]
 
+
+def section_question_count(section):
+    if "items" in section:
+        return len(section["items"])
+    if "domains" in section:
+        return sum(len(v) for v in section["domains"].values())
+    return 0
+
+
+SECTION_QCOUNTS = [section_question_count(s) for s in SCREEN_SECTIONS]
+TOTAL_QUESTIONS = sum(SECTION_QCOUNTS)
+
 # ---- Quick Map (original 17-parameter self-assessment) --------------------
 QUESTIONS = {
     "Executive Function": {

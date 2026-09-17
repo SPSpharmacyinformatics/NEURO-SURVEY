@@ -9,11 +9,20 @@
 
 {{ blip("happy", "Rule number one: there are no wrong answers. Rule number two: snacks help.") }}
 
+<div class="card" id="resume-banner" style="display:none; border-color:var(--teal)">
+    <h2>Welcome back! 👋</h2>
+    <p class="muted" id="resume-info"></p>
+    <div style="display:flex; gap:10px; flex-wrap:wrap">
+        <button class="btn" id="resume-btn" type="button">Resume where I left off →</button>
+        <button class="btn" id="discard-btn" type="button" style="background:#fff">Start fresh 🧼</button>
+    </div>
+</div>
+
 <div class="card">
     <h2>Ticket booth 🎟️</h2>
     <p class="muted">Age and gender are kept only for anonymous statistics.
     Your name? We don't even ask — Blip forgets faces instantly. 🫥</p>
-    <form method="post" action="{{ url_for('screen_start') }}">
+    <form method="post" id="ticket-form" action="{{ url_for('screen_start') }}">
         <label class="muted">How many years have you been alive?</label>
         <input type="number" name="age" min="10" max="99" required>
         <label class="muted">Gender</label>
@@ -24,4 +33,72 @@
         <div style="margin-top:14px"><button class="btn">All aboard! 🚂</button></div>
     </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    var total = {{ total }};
+    var form = document.getElementById("ticket-form");
+    var banner = document.getElementById("resume-banner");
+    var info = document.getElementById("resume-info");
+    var resumeBtn = document.getElementById("resume-btn");
+    var discardBtn = document.getElementById("discard-btn");
+
+    var d = NeuroDraft.read();
+    if (d && d.identity) NeuroDraft.apply(form, d.identity);
+    var count = NeuroDraft.savedCount();
+    if (count > 0) {
+        banner.style.display = "block";
+        var when = "";
+        try { when = new Date(d.ts).toLocaleString(); } catch (e) {}
+        info.textContent = "You have answers saved on this device from " + when +
+            " (" + count + " of " + total + " stops done). They haven't been sent anywhere yet.";
+    }
+
+    form.addEventListener("input", function () { NeuroDraft.saveIdentity(form); });
+    form.addEventListener("change", function () { NeuroDraft.saveIdentity(form); });
+    form.addEventListener("submit", function () { NeuroDraft.saveIdentity(form); });
+
+    discardBtn.addEventListener("click", function () {
+        NeuroDraft.clear();
+        banner.style.display = "none";
+    });
+
+    resumeBtn.addEventListener("click", async function () {
+        var draft = NeuroDraft.read() || {};
+        var ident = draft.identity || {};
+        if (!ident.age || !ident.gender) {
+            ident = { age: form.age.value, gender: form.gender.value };
+        }
+        if (!ident.age || !ident.gender) {
+            alert("Please fill in your age and gender once, then tap Resume — the rest is already saved.");
+            return;
+        }
+        resumeBtn.disabled = true;
+        resumeBtn.textContent = "Rebuilding your progress… ⏳";
+        try {
+            await fetch("{{ url_for('screen_start') }}", {
+                method: "POST", body: new URLSearchParams(ident), credentials: "same-origin"
+            });
+            for (var i = 0; i < total; i++) {
+                if (!draft.sections || !draft.sections[i]) {
+                    window.location = "/screen/" + i;
+                    return;
+                }
+                await fetch("/screen/" + i + "/next", {
+                    method: "POST",
+                    body: new URLSearchParams(draft.sections[i]),
+                    credentials: "same-origin"
+                });
+            }
+            window.location = "{{ url_for('screen_finish') }}";
+        } catch (e) {
+            resumeBtn.disabled = false;
+            resumeBtn.textContent = "Resume where I left off →";
+            alert("Couldn't rebuild your progress — please start fresh. (" + e + ")");
+        }
+    });
+})();
+</script>
 {% endblock %}
