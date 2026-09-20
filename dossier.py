@@ -32,7 +32,7 @@ def _header(pdf, title, sub=None):
 def _footer(pdf, n, username):
     pdf.text(36, pdf.h - 30, 8, _t("NEURO-SURVEY Omni Assessment - screening only, not a diagnosis"),
              color=MUTED)
-    pdf.text(pdf.w - 90, pdf.h - 30, 8, _t("@%s - p.%d" % (username, n)), color=MUTED)
+    pdf.text(pdf.w - 90, pdf.h - 30, 8, _t("%s - p.%d" % (username, n)), color=MUTED)
 
 
 def build_dossier(username, state):
@@ -49,7 +49,7 @@ def build_dossier(username, state):
     pdf.text(330, 150, 17, _t(words[0]), bold=True, color=(255, 255, 255))
     if len(words) > 1:
         pdf.text(330, 176, 11, _t(", ".join(words[1:])), color=(159, 179, 217))
-    pdf.text(330, 210, 10, "@%s" % username, color=GOLD)
+    pdf.text(330, 210, 10, "%s" % username, color=GOLD)
     y = 250
     for label, val in (("Stage", state["stage"]), ("Power Level", str(state["power"])),
                        ("Sections", "%d / %d" % (state["done"], state["total_sections"]))):
@@ -180,14 +180,14 @@ def build_certificate_pdf(username, state, mint_row):
     pdf.text(60, 450, 16, _t(words[0]), bold=True, color=(255, 255, 255))
     if len(words) > 1:
         pdf.text(60, 474, 10, _t(", ".join(words[1:])), color=(159, 179, 217))
-    pdf.text(60, 494, 10, "minted to @%s on %s" % (username, mint_row["minted_at"]),
+    pdf.text(60, 494, 10, "minted to nft name %s on %s" % (username, mint_row["minted_at"]),
              color=MUTED)
     pdf.rect(60, 530, pdf.w - 120, 46, fill=(10, 13, 24), stroke=(61, 74, 107))
     pdf.text(76, 552, 8, "TOKEN #   %s" % mint_row["id"], bold=True, color=(127, 227, 160))
     pdf.text(76, 568, 8, "SHA-256 %s" % mint_row["token_hash"], color=(127, 227, 160))
     pdf.text(60, 614, 8, "This collectible is deterministically bound to the answers and",
              color=MUTED)
-    pdf.text(60, 628, 8, "username at time of minting. Verify by re-hashing the dossier.",
+    pdf.text(60, 628, 8, "nft name at time of minting. Verify by re-hashing the dossier.",
              color=MUTED)
     return pdf.out()
 

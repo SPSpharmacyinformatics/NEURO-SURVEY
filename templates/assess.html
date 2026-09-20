@@ -20,10 +20,10 @@
     <a class="btn" href="{{ url_for('dashboard') }}">Open my dashboard 📚</a>
 </div>
 {% else %}
-{{ blip("happy", "Grab a free username badge first — it keeps all your results on one shelf 📚") }}
+{{ blip("happy", "Mint a free nft name first — it keeps all your results on one shelf 📚") }}
 <div class="card center">
-    <a class="btn pink" href="{{ url_for('login', next=request.path) }}">Get my username 🎟️</a>
-    <p class="muted" style="margin-top:8px">Required before taking tests — no email, no password.</p>
+    <a class="btn pink" href="{{ url_for('login', next=request.path) }}">Mint my nft name 🎟️</a>
+    <p class="muted" style="margin-top:8px">Required before taking tests — no email, no password, your name is never stored.</p>
 </div>
 {% endif %}
 

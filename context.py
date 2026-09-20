@@ -207,6 +207,42 @@ def support_tier(pairs):
 
 
 # --------------------------------------------------------------------------
+# Support routing for the stand-alone instrument library. Only flags with a
+# validated threshold appear here; descriptive-band modules (PSS-4) never
+# reach this function because they do not set ``flag``.
+# --------------------------------------------------------------------------
+
+LIBRARY_TIER = {
+    "phq2": ("support", "The 2-item mood screen came back positive — that's the "
+              "signal to take the full PHQ-9, and more importantly to talk to "
+              "someone equipped to help."),
+    "gad2": ("support", "The 2-item anxiety screen came back positive. That's a "
+              "sign to look closer, and worth a real conversation rather than "
+              "more willpower."),
+    "who5": ("support", "Your well-being score came back low. Acting on that "
+              "early is a kindness to yourself, not an over-reaction."),
+    "isi": ("support", "Your sleep score landed in the clinical insomnia range. "
+             "Sleep is a lever that moves almost everything else — worth real "
+             "support."),
+    "pcl5": ("crisis", "The trauma screen (PCL-5) came back positive. Trauma "
+             "support is effective, and now is a good time to reach for it."),
+    "auditc": ("support", "The alcohol screen came back positive. That's a health "
+               "signal, not a character flaw — worth an honest, non-judgemental "
+               "conversation with a GP or clinician."),
+}
+
+
+def library_tier(module, result):
+    """Support tier for a single stand-alone library result."""
+    if not result or not result.get("flag"):
+        return {"tier": "ok", "reasons": [], "resources": RESOURCES}
+    entry = LIBRARY_TIER.get(module["id"])
+    if not entry:
+        return {"tier": "ok", "reasons": [], "resources": RESOURCES}
+    return {"tier": entry[0], "reasons": [entry[1]], "resources": RESOURCES}
+
+
+# --------------------------------------------------------------------------
 # Discussion guide for a practitioner (plain-text).
 # --------------------------------------------------------------------------
 

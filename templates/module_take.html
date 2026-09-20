@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "_blip.html" import blip %}
+{% block title %}{{ module.title }} — Instrument Library{% endblock %}
+{% block body %}
+<p class="muted" style="color:#eaf2ff"><a href="{{ url_for('library_home') }}"
+   style="color:#eaf2ff">🧰 library</a> · {{ module.instrument }}</p>
+<h2>{{ module.title }}</h2>
+<p class="muted tiny">💾 Nothing is saved until you submit — and then only your score is kept.
+    Your item-by-item answers are discarded after scoring.</p>
+
+{{ blip("happy", ["No wrong answers here 🙌", "Answer for the real you, not the ideal you 🤙",
+                  "Take your time — this isn't a race ⏱️"][module.minutes % 3]) }}
+
+<form method="post" action="{{ url_for('library_submit', sid=module.id) }}">
+    <div class="card" style="background:#f6f0ff">
+        <p class="muted" style="margin:0">{{ module.intro }}</p>
+    </div>
+
+    {% set ns = namespace(i=0) %}
+    {% for item in module["items"] %}
+    <div class="q-item">
+        <p>{{ loop.index }}. {{ item_text(item) }}</p>
+        {% for s in item_scale(module, item) %}
+        <label class="opt"><input type="radio" name="{{ module.id }}_{{ ns.i }}"
+               value="{{ loop.index0 }}" {% if loop.index0 == 0 %}required{% endif %}> {{ s }}</label>
+        {% endfor %}
+    </div>
+    {% set ns.i = ns.i + 1 %}
+    {% endfor %}
+
+    <p class="muted tiny">Source: {{ module.citation }}</p>
+    <div class="center" style="margin-top:18px">
+        <button class="btn">Score it 🎯</button>
+        <a class="btn secondary" href="{{ url_for('library_home') }}">Cancel</a>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "_blip.html" import blip %}
+{% block title %}{{ module.title }} — Result{% endblock %}
+{% block body %}
+<p class="muted" style="color:#eaf2ff"><a href="{{ url_for('library_home') }}"
+   style="color:#eaf2ff">🧰 library</a> · {{ module.instrument }}</p>
+
+<div class="center">
+    <h1>🎯 {{ module.title }}</h1>
+    <span class="badge {{ r.level }}">{{ r.band }}</span>
+</div>
+
+<div class="card">
+    <h2 style="margin-bottom:4px">{{ r.score }}<span class="muted" style="font-size:.5em">/{{ r.max }}</span></h2>
+    <p class="muted">{{ module.instrument }} · total score</p>
+    <p>{{ r.note }}</p>
+    <p class="muted tiny">Source: {{ module.citation }}</p>
+</div>
+
+<div class="card" style="background:#f6f0ff">
+    <b>What this is — and isn't.</b>
+    <p class="muted" style="margin:6px 0 0">This is a screening result, not a diagnosis.
+    {% if r.flag %}Your score crossed the usual threshold, which simply means it's worth
+    talking through with a qualified clinician.{% else %}Your score didn't cross the usual
+    threshold — that's reassuring, though it can't rule anything out on its own.{% endif %}
+    Your results are most useful over time and alongside how you actually feel.</p>
+</div>
+
+{% if tier and tier.tier != "ok" %}
+{% if tier.tier == "crisis" %}
+<div class="card" style="background:#ffe8e8; border-color:#c0392b">
+    <h2 style="color:#c0392b">💛 Let's line up backup today</h2>
+    {% for reason in tier.reasons %}<p>{{ reason }}</p>{% endfor %}
+    <p>You don't need to be in "complete crisis" to call — being overwhelmed is
+    enough, and they've heard it all.</p>
+    <p class="muted" style="margin:6px 0"><b>UAE:</b></p>
+    {% for name, desc in tier.resources.uae %}
+        <p class="muted" style="margin:2px 0">☎️ <b>{{ name }}</b> — {{ desc }}</p>
+    {% endfor %}
+    <p class="muted" style="margin:6px 0"><b>International:</b></p>
+    {% for name, desc in tier.resources.intl %}
+        <p class="muted" style="margin:2px 0">☎️ <b>{{ name }}</b> — {{ desc }}</p>
+    {% endfor %}
+    <p class="muted" style="margin-top:10px">In an emergency, call your local number
+    (UAE: <b>998</b> medical / <b>999</b> police) or go to the nearest emergency department.</p>
+</div>
+{% else %}
+<div class="card" style="background:#fff3cd">
+    <h2>🪧 Where real support lives</h2>
+    {% for reason in tier.reasons %}<p>{{ reason }}</p>{% endfor %}
+    <p class="muted">These are private, non-commercial lines:</p>
+    <p class="muted" style="margin:6px 0"><b>UAE:</b></p>
+    {% for name, desc in tier.resources.uae %}
+        <p class="muted" style="margin:2px 0">☎️ <b>{{ name }}</b> — {{ desc }}</p>
+    {% endfor %}
+    <p class="muted" style="margin:6px 0"><b>International:</b></p>
+    {% for name, desc in tier.resources.intl %}
+        <p class="muted" style="margin:2px 0">☎️ <b>{{ name }}</b> — {{ desc }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+{% endif %}
+
+<div class="center" style="margin-top:14px">
+    <a class="btn secondary" href="{{ url_for('library_take', sid=module.id) }}">Take again 🔁</a>
+    <a class="btn" href="{{ url_for('library_home') }}">Back to library 🧰</a>
+    <a class="btn secondary" href="{{ url_for('tracker') }}">Log it in my check-in 📓</a>
+</div>
+{% if r.flag %}<script>party(60);</script>{% endif %}
+{% endblock %}

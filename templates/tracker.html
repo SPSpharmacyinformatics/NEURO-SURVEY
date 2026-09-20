@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% from "_blip.html" import blip %}
+{% block title %}Daily Check-in — The Brain Circus{% endblock %}
+{% block head %}<script src="/static/js/chart.umd.min.js"></script>
+<script>window.NEURO_LIB_METRICS = {{ lib_metrics|tojson }};</script>{% endblock %}
+{% block body %}
+<div class="center"><h1>📓 Daily Check-in</h1></div>
+<p class="muted" style="color:#eaf2ff">A thirty-second log of how today actually went.
+It lives <b>only in this browser</b> — nothing is sent to the server, ever.</p>
+
+{{ blip("happy", "Small logs, big patterns. One check-in is a dot; a month is a map 🗺️") }}
+
+<div class="card">
+    <h2 id="form-heading">How was today?</h2>
+    <p class="muted tiny">Sliders start neutral and are <b>only recorded once you move
+    them</b> — so leave anything you didn't really notice untouched. Logging fewer,
+    honest measures beats filling every box.</p>
+    <form id="tracker-form" onsubmit="return false;">
+        <div class="grid">
+            <div><label>Date<input type="date" id="tr-date"></label></div>
+            <div><label>Sleep (hours)<input type="number" id="tr-sleep_h" step="0.5" min="0" max="24" placeholder="7.5"></label></div>
+        </div>
+
+        <div id="range-fields"
+             data-fields='[["mood","Mood","1 = rough, 5 = great"],["energy","Energy","1 = drained, 5 = charged"],["focus","Focus","1 = scattered, 5 = locked in"],["anxiety","Anxiety","1 = calm, 5 = very anxious"],["sensory","Sensory load","1 = calm, 5 = overwhelmed"],["sleep_q","Sleep quality","1 = awful, 5 = great"]]'></div>
+
+        <div class="grid">
+            <div><label>Caffeine (cups)<input type="number" id="tr-caffeine" step="1" min="0" max="20" placeholder="0"></label></div>
+            <div><label>Cycle day (optional)<input type="number" id="tr-cycle" step="1" min="1" max="60" placeholder="—"></label></div>
+        </div>
+
+        <div style="display:flex;gap:24px;flex-wrap:wrap;margin:10px 0;font-weight:700">
+            <label><input type="checkbox" id="tr-meds" style="width:auto"> 💊 Took meds</label>
+            <label><input type="checkbox" id="tr-exercise" style="width:auto"> 🏃 Moved my body</label>
+        </div>
+
+        <label>Notes (what happened?)<textarea id="tr-notes" rows="2" maxlength="300" placeholder="optional"></textarea></label>
+
+        <div style="border-top:2px dashed var(--ink);margin:14px 0;padding-top:10px">
+            <b class="muted">Attach a scale score (optional)</b>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px">
+                <select id="score-select" style="flex:1;min-width:180px"></select>
+                <input type="number" id="score-val" style="width:90px" min="0" placeholder="score">
+                <button class="btn secondary small" type="button" id="score-add">Add</button>
+            </div>
+            <div id="score-chips" style="margin-top:8px"></div>
+        </div>
+
+        <div style="text-align:center;margin-top:16px">
+            <button class="btn" type="button" id="tracker-save">Save today's check-in ✅</button>
+            <span class="muted tiny" id="tracker-status" style="display:block;margin-top:6px"></span>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Your check-ins</h2>
+    <p class="muted tiny">Saved on this device: <b id="tracker-count">0</b></p>
+    <div id="tracker-entries"></div>
+</div>
+
+<div class="card">
+    <h2>Trends 📈</h2>
+    <p class="muted tiny">Lines are normalised to each measure's own scale (0–100%). Hover a
+    point for the raw value. Two or more check-ins are needed to draw a line.</p>
+    <div style="position:relative;height:340px"><canvas id="tracker-chart"></canvas></div>
+</div>
+
+<div class="card">
+    <h2>What moves together 🔗</h2>
+    <p class="muted tiny">A correlation is a hint, never proof — and with few days it's noisy.
+    This needs at least 5 shared check-ins before it says anything.</p>
+    <label>Compare against
+        <select id="corr-target"></select></label>
+    <div id="corr-results"></div>
+    <div id="group-results"></div>
+</div>
+
+<div class="card">
+    <h2>Backup &amp; reset 💾</h2>
+    <p class="muted tiny">Your log never leaves the browser, so keep your own backup if it matters.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn secondary small" type="button" id="tr-export">Download JSON ⬇️</button>
+        <label class="btn secondary small" style="margin:0">Import JSON
+            <input type="file" id="tr-import" accept="application/json,.json" style="display:none"></label>
+        <button class="btn secondary small" type="button" id="tr-clear">Erase all check-ins 🧽</button>
+    </div>
+</div>
+
+<div class="center">
+    <a class="btn secondary" href="{{ url_for('library_home') }}">🧰 Instrument library</a>
+    <a class="btn secondary" href="{{ url_for('dashboard') }}">📚 My shelf</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/neuro_tracker.js"></script>
+<script>NeuroTracker.init();</script>
+{% endblock %}

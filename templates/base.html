@@ -201,6 +201,8 @@
             {% set u = user if user is defined else none %}
             {% if u %}
                 <a class="toplink" href="{{ url_for('dashboard') }}">📚 {{ u.username }}'s shelf</a>
+                <a class="toplink" href="{{ url_for('library_home') }}">🧰 library</a>
+                <a class="toplink" href="{{ url_for('tracker') }}">📓 check-in</a>
                 <a class="toplink" href="{{ url_for('hero_page') }}">🦸 my hero</a>
                 <a class="toplink" href="{{ url_for('logout') }}">log out 👋</a>
             {% else %}
@@ -229,9 +231,10 @@
                     The font and charts are served from the site itself — nothing loads from
                     Google, Cloudflare, or analytics trackers. No ads, no cookies for tracking,
                     no pixel.</div>
-                <div class="row"><b>Your name stays in your browser.</b> Your username and the
-                    name you type before screening exist <i>only</i> in a temporary session cookie
-                    in <i>your</i> browser. They are never written to disk and never leave your device.</div>
+                <div class="row"><b>Your name never stays.</b> The name you type at log-in
+                    exists <i>only</i> in a temporary session cookie in <i>your</i> browser. It's never
+                    written to disk. Instead it's folded into a one-way anonymous UID (a keyed hash that
+                    can't be reversed) that quietly ties your results to your shelf.</div>
                 <div class="row"><b>What reaches the server (and is kept).</b> Your <i>scores</i>,
                     age band and gender are sent once, over TLS, to score your results and (only if
                     you contribute them) to the anonymous community World View. Scores are stored

@@ -265,8 +265,8 @@ def certificate_svg(token_id, token_hash, codename, username, minted_at, art_svg
 <text x="210" y="84" text-anchor="middle" font-family="Courier New,monospace" font-size="13" fill="#9fb3d9">TOKEN #""" + str(token_id) + """</text>
 <g>""" + inner + """</g>
 <text x="210" y="428" text-anchor="middle" font-family="Georgia,serif" font-size="17" fill="#ffffff" font-style="italic">""" + codename[:38] + """</text>
-<text x="210" y="452" text-anchor="middle" font-family="Helvetica,Arial" font-size="12" fill="#9fb3d9">minted for @""" + username + """ on """ + str(minted_at) + """</text>
+<text x="210" y="452" text-anchor="middle" font-family="Helvetica,Arial" font-size="12" fill="#9fb3d9">minted for nft name """ + username + """ on """ + str(minted_at) + """</text>
 <rect x="40" y="472" width="340" height="34" rx="8" fill="#0b0f1c" stroke="#3d4a6b"/>
 <text x="210" y="494" text-anchor="middle" font-family="Courier New,monospace" font-size="11" fill="#7fe3a0">""" + short + """</text>
-<text x="210" y="530" text-anchor="middle" font-family="Helvetica,Arial" font-size="10" fill="#5d6f96">SHA-256 bound to answers + username - offline-verifiable collectible</text>
+<text x="210" y="530" text-anchor="middle" font-family="Helvetica,Arial" font-size="10" fill="#5d6f96">SHA-256 bound to answers + nft name - offline-verifiable collectible</text>
 </svg>"""

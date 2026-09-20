@@ -1,6 +1,9 @@
+import hashlib
+import hmac
 import io
 import json
 import os
+import re
 import secrets
 import sqlite3
 import time
@@ -17,6 +20,7 @@ import character
 import dossier
 import context
 import trends
+import library
 
 def _session_secret():
     env = os.environ.get("NEURO_SECRET")
@@ -75,8 +79,7 @@ def init_db():
     conn = get_db()
     conn.executescript("""
         CREATE TABLE IF NOT EXISTS users(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
+            id TEXT PRIMARY KEY,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
         CREATE TABLE IF NOT EXISTS responses(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -108,12 +111,23 @@ def init_db():
             user_id INTEGER UNIQUE NOT NULL,
             codename TEXT, token_hash TEXT,
             minted_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS module_results(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER, module_id TEXT NOT NULL,
+            score INTEGER, max INTEGER, band TEXT,
+            flag INTEGER DEFAULT 0, note TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
     """)
     for table in ("responses", "screens", "iq_results", "eq_results", "personality_results"):
         try:
             conn.execute(f"ALTER TABLE {table} ADD COLUMN user_id INTEGER")
         except sqlite3.OperationalError:
             pass
+    cols = [r["name"] for r in conn.execute("PRAGMA table_info(users)")]
+    if "username" in cols:
+        conn.execute("DROP TABLE users")
+        conn.execute("CREATE TABLE users(id TEXT PRIMARY KEY,"
+                     " created_at DATETIME DEFAULT CURRENT_TIMESTAMP)")
     conn.commit()
     conn.close()
 
@@ -132,6 +146,21 @@ def require_login():
     return None
 
 
+def _uid_from_handle(handle):
+    """One-way, deterministic UID: HMAC(server_secret, handle).
+
+    The username is never stored — only this keyed digest is kept, so the
+    same handle on a later login recomputes the same UID and the shelf
+    reappears. Without the server secret the handle is not recoverable.
+    """
+    return hmac.new(app.secret_key.encode(), handle.lower().encode(),
+                    hashlib.sha256).hexdigest()
+
+
+def _slug(text):
+    return re.sub(r'[^A-Za-z0-9]+', '_', text).strip('_') or 'anon'
+
+
 # ---------------- auth ----------------
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -144,18 +173,18 @@ def login():
             return render_template('login.html', error="Username must be 3-20 letters, digits or underscores.",
                                    next=nxt)
         conn = get_db()
-        row = conn.execute("SELECT id FROM users WHERE username=?", (username,)).fetchone()
+        uid = _uid_from_handle(username)
+        row = conn.execute("SELECT id FROM users WHERE id=?", (uid,)).fetchone()
         if row:
-            uid = row["id"]
-            flash_msg = f"Welcome back, {username}!"
+            flash_msg = "Welcome back, {}!".format(character.nft_name(uid))
         else:
-            cur = conn.execute("INSERT INTO users(username) VALUES(?)", (username,))
-            uid = cur.lastrowid
-            flash_msg = f"Welcome aboard, {username}! Fresh journey started."
+            conn.execute("INSERT INTO users(id) VALUES(?)", (uid,))
+            flash_msg = "Welcome aboard, {}! Fresh journey started.".format(
+                character.nft_name(uid))
         conn.commit()
         conn.close()
         session["uid"] = uid
-        session["username"] = username
+        session["username"] = character.nft_name(uid)
         session["just_logged_in"] = flash_msg
         return redirect(nxt)
     return render_template('login.html', next=nxt)
@@ -199,7 +228,15 @@ def dashboard():
         p5_latest = d
     map_rows = conn.execute("SELECT * FROM responses WHERE user_id=? ORDER BY id DESC LIMIT 10",
                             (uid,)).fetchall()
+    mr_rows = conn.execute("SELECT * FROM module_results WHERE user_id=? ORDER BY id DESC LIMIT 20",
+                           (uid,)).fetchall()
     conn.close()
+
+    module_latest = {}
+    for r in mr_rows:
+        d = dict(r)
+        module_latest.setdefault(d["module_id"], d)
+    module_rows = [(m, module_latest.get(m["id"])) for m in library.LIBRARY]
 
     iq_latest = None
     if iq_rows:
@@ -248,6 +285,7 @@ def dashboard():
                            map_latest=map_latest, map_hist=map_rows,
                            map_scores=map_scores,
                            big5=p5_latest, big5_hist=p5_rows,
+                           module_rows=module_rows,
                            insights=insights)
 
 
@@ -406,6 +444,74 @@ def screen_finish():
 @app.route('/compare')
 def compare():
     return render_template('compare.html', metrics=trends.METRICS)
+
+
+# ---------------- extended instrument library ----------------
+@app.route('/library')
+def library_home():
+    gate = require_login()
+    if gate:
+        return gate
+    user = current_user()
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT module_id, score, max, band, flag, created_at FROM module_results "
+        "WHERE user_id=? ORDER BY id DESC", (user["id"],)).fetchall()
+    conn.close()
+    latest = {}
+    for r in rows:
+        latest.setdefault(r["module_id"], dict(r))
+    return render_template('library.html', user=user, modules=library.LIBRARY,
+                           reference_only=library.REFERENCE_ONLY, latest=latest)
+
+
+@app.route('/library/<sid>', methods=['GET'])
+def library_take(sid):
+    gate = require_login()
+    if gate:
+        return gate
+    module = library.BY_ID.get(sid)
+    if not module:
+        flash("That screener doesn't exist.")
+        return redirect(url_for('library_home'))
+    return render_template('module_take.html', user=current_user(), module=module,
+                           item_text=library.item_text, item_scale=library.item_scale)
+
+
+@app.route('/library/<sid>/submit', methods=['POST'])
+def library_submit(sid):
+    gate = require_login()
+    if gate:
+        return gate
+    module = library.BY_ID.get(sid)
+    if not module:
+        flash("That screener doesn't exist.")
+        return redirect(url_for('library_home'))
+    missing = library.missing_items(module, request.form)
+    if missing:
+        flash("Please answer every question — %d left blank." % len(missing))
+        return redirect(url_for('library_take', sid=module["id"]))
+    result = library.score_module(module, request.form)
+    tier = context.library_tier(module, result)
+    conn = get_db()
+    conn.execute(
+        "INSERT INTO module_results(user_id, module_id, score, max, band, flag, note) "
+        "VALUES(?,?,?,?,?,?,?)",
+        (current_user()["id"], module["id"], result["score"], result["max"],
+         result["band"], 1 if result["flag"] else 0, result["note"]))
+    conn.commit()
+    conn.close()
+    return render_template('module_result.html', user=current_user(), module=module,
+                           r=result, tier=tier)
+
+
+@app.route('/tracker')
+def tracker():
+    gate = require_login()
+    if gate:
+        return gate
+    return render_template('tracker.html', user=current_user(),
+                           lib_metrics=library.LIB_METRICS)
 
 
 # ---------------- IQ (CHC) ----------------
@@ -643,7 +749,7 @@ def report_pdf():
     data = dossier.build_dossier(user["username"], state)
     return send_file(io.BytesIO(data), mimetype='application/pdf',
                      as_attachment=True,
-                     download_name=f"neuro_dossier_{user['username']}.pdf")
+                     download_name=f"neuro_dossier_{_slug(user['username'])}.pdf")
 
 
 @app.route('/certificate.pdf')
@@ -658,13 +764,13 @@ def certificate_pdf():
     data = dossier.build_certificate_pdf(user["username"], state, m)
     return send_file(io.BytesIO(data), mimetype='application/pdf',
                      as_attachment=True,
-                     download_name=f"neuro_token_{m['id']}_{user['username']}.pdf")
+                     download_name=f"neuro_token_{m['id']}_{_slug(user['username'])}.pdf")
 
 
 BASE_URL = "https://survey.sps.dpdns.org"
 
 CRAWLABLE_ROUTES = ["/", "/quick-map", "/world-view",
-                    "/screen", "/iq", "/eq", "/personality"]
+                    "/screen", "/iq", "/eq", "/personality", "/library"]
 
 
 @app.route('/robots.txt')

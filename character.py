@@ -43,6 +43,28 @@ TITLE_BY_EQ = [
     (0, "Novice of the Inner Path"),
 ]
 
+NFT_FIRST = ["Sun", "Tide", "Ember", "Frost", "Twi", "Noir", "Volt", "Moss",
+             "Echo", "Drift", "Zen", "Rune", "Pixel", "Neon", "Aur", "Bone"]
+NFT_SECOND = ["mind", "mint", "veil", "warden", "signal", "epoch", "axiom",
+              "spark", "pulse", "arc", "loop", "soul"]
+NFT_TITLE = ["the Silent Keeper", "the Unbound Seer", "the Gilded Scout",
+             "the Wandering Spark", "the Ashen Listener", "the Prism Walker",
+             "the Hollow Cartographer", "the Quiet Architect"]
+
+def nft_name(uid):
+    """Anonymous NFT-style display name, derived one-way from the user's UID.
+
+    Deterministic per UID (so refresh/relogin shows the same alias) but
+    reveals nothing about the person behind it. The UID itself is already an
+    HMAC of the username + server secret, so the name is twice-removed.
+    """
+    h = hashlib.sha256(("nft:" + str(uid)).encode()).digest()
+    first = NFT_FIRST[h[0] % len(NFT_FIRST)]
+    second = NFT_SECOND[h[1] % len(NFT_SECOND)]
+    title = NFT_TITLE[h[2] % len(NFT_TITLE)]
+    num = int.from_bytes(h[4:8], "big") % 100000
+    return f"{first}{second} #{num:05d} {title}"
+
 
 def _clamp(v):
     return max(0, min(100, int(round(v))))

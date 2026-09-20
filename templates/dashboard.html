@@ -81,6 +81,30 @@
 </div>
 {% endif %}
 
+<div class="card">
+    <h2>🧰 Instrument Library <span class="muted" style="font-weight:400">· stand-alone screeners</span></h2>
+    {% if module_rows %}
+        <div class="grid">
+        {% for m, r in module_rows %}
+            <div style="margin-bottom:8px">
+                <b>{{ m.title }}</b>
+                {% if r %}
+                    <div><span class="badge {{ 'flag' if r.flag else 'ok' }}">{{ r.band }}</span>
+                        <span class="muted tiny">{{ r.score }}{% if r.max %}/{{ r.max }}{% endif %}
+                        · {{ r.created_at[:10] }}</span></div>
+                {% else %}
+                    <div class="muted tiny">not taken yet ·
+                        <a href="{{ url_for('library_take', sid=m.id) }}">start</a></div>
+                {% endif %}
+            </div>
+        {% endfor %}
+        </div>
+    {% endif %}
+    <p style="margin-bottom:0"><a class="btn secondary small"
+        href="{{ url_for('library_home') }}">Open the library 🧰</a>
+        <a class="btn secondary small" href="{{ url_for('tracker') }}">Daily check-in 📓</a></p>
+</div>
+
 <div class="center">
     <a class="btn" href="{{ url_for('index') }}">Take another 🎪</a>
     <a class="btn secondary" href="{{ url_for('logout') }}">Log out 👋</a>

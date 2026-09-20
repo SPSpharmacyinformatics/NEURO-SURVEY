@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% from "_blip.html" import blip %}
+{% block title %}Instrument Library — The Brain Circus{% endblock %}
+{% block body %}
+<div class="center"><h1>🧰 Instrument Library</h1></div>
+<p class="muted" style="color:#eaf2ff">Stand-alone screeners you can take any time — no journey
+required. Each one is scored the moment you submit, and only the score is kept.</p>
+
+{{ blip("happy", "Pick a lens. Each one zooms in on a different corner of the brain 🔍") }}
+
+{% for m in modules %}
+{% set last = latest.get(m.id) %}
+<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+        <div>
+            <span class="sticker">{{ m.group }}</span>
+            <h2 style="margin:8px 0 2px">{{ m.title }}</h2>
+            <p class="muted" style="margin:0">{{ m.instrument }}</p>
+        </div>
+        {% if last %}
+            <span class="badge {{ 'flag' if last.flag else 'ok' }}">{{ last.band }}</span>
+        {% endif %}
+    </div>
+    <p style="margin:10px 0 6px">{{ m.blurb }}</p>
+    <p class="muted tiny">⏱️ about {{ m.minutes }} min · {{ m["items"]|length }}
+        question{{ '' if m["items"]|length == 1 else 's' }}</p>
+    {% if last %}
+        <p class="muted tiny">Last taken {{ last.created_at[:10] }} — scored
+            <b>{{ last.score }}{% if last.max %}/{{ last.max }}{% endif %}</b>.</p>
+    {% endif %}
+    <a class="btn small" href="{{ url_for('library_take', sid=m.id) }}">
+        {{ "Take again 🔁" if last else "Start 🚀" }}</a>
+</div>
+{% endfor %}
+
+<div class="card" style="background:#fff8dc; border-style:dashed">
+    <h2>📎 Available on paper, not reproduced here</h2>
+    <p class="muted">These are real, useful instruments, but their item wording is
+    copyrighted or licence-restricted — so this site won't copy it or fake a look-alike.
+    Ask a clinician or the publisher for the official form:</p>
+    {% for ref in reference_only %}
+        <p style="margin:8px 0"><b>{{ ref.title }}</b> — <span class="muted">{{ ref.instrument }}</span>
+        <br><span class="muted tiny">{{ ref.why }}</span></p>
+    {% endfor %}
+</div>
+
+<div class="center">
+    <a class="btn secondary" href="{{ url_for('tracker') }}">📓 Daily check-in tracker</a>
+    <a class="btn secondary" href="{{ url_for('dashboard') }}">📚 My shelf</a>
+</div>
+{% endblock %}

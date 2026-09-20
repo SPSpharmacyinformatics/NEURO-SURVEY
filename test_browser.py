@@ -44,12 +44,12 @@ def run():
         page.screenshot(path=f"{ART}/01_landing.png")
 
         # ---------- 1. registration ----------
-        page.get_by_role("link", name=re.compile("username", re.I)).first.click()
+        page.get_by_role("link", name=re.compile("log in|nft name", re.I)).first.click()
         page.fill("input[name='username']", USER)
         human_pause()
-        page.get_by_role("button", name=re.compile("That's me")).click()
-        expect(page.locator(".topbar")).to_contain_text(USER)
-        check("registration + topbar shows username", True)
+        page.get_by_role("button", name=re.compile("Mint my nft name|That's me")).click()
+        expect(page.locator(".topbar")).to_contain_text("shelf")
+        check("registration + topbar shows nft name shelf", True)
         page.screenshot(path=f"{ART}/02_registered.png")
 
         # ---------- 2. clinical screen, full human walk ----------
